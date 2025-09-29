@@ -1,4 +1,4 @@
-# ft_transcendence Documentation
+# Documentation
 
 ## Architecture Overview
 

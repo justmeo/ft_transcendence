@@ -14,6 +14,9 @@ RUN npm install --only=production
 # Copy source code
 COPY src/ ./src/
 
+# Create database directory
+RUN mkdir -p ./db
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
