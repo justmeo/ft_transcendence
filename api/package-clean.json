@@ -1,22 +1,19 @@
 {
   "name": "ft-transcendence-api",
   "version": "1.0.0",
-  "main": "src/index-minimal.js",
+  "main": "src/index-clean.js",
   "scripts": {
-    "start": "node src/index-minimal.js",
-    "dev": "node --watch src/index-minimal.js"
+    "start": "node src/index-clean.js",
+    "dev": "node --watch src/index-clean.js"
   },
   "dependencies": {
     "@fastify/cookie": "^9.2.0",
     "@fastify/cors": "^8.4.0",
-    "@fastify/helmet": "^11.1.1",
-    "@fastify/rate-limit": "^9.1.0",
     "@fastify/session": "^10.7.0",
     "@fastify/websocket": "^8.3.1",
     "bcryptjs": "^2.4.3",
     "fastify": "^4.24.3",
     "better-sqlite3": "^9.2.2",
-    "dotenv": "^16.3.1",
-    "uuid": "^9.0.1"
+    "dotenv": "^16.3.1"
   }
 }

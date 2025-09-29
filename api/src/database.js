@@ -152,6 +152,63 @@ class DatabaseManager {
       )
     `);
 
+    this.runMigration('008_create_chat_channels_table', `
+      CREATE TABLE IF NOT EXISTS chat_channels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR(100) NOT NULL,
+        type VARCHAR(20) NOT NULL CHECK (type IN ('global', 'dm', 'tournament')),
+        created_by INTEGER DEFAULT NULL,
+        participant1_id INTEGER DEFAULT NULL,
+        participant2_id INTEGER DEFAULT NULL,
+        tournament_id INTEGER DEFAULT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id),
+        FOREIGN KEY (participant1_id) REFERENCES users(id),
+        FOREIGN KEY (participant2_id) REFERENCES users(id),
+        FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
+      )
+    `);
+
+    this.runMigration('009_create_chat_messages_table', `
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        message_type VARCHAR(20) DEFAULT 'text' CHECK (message_type IN ('text', 'system', 'match_invite')),
+        metadata TEXT DEFAULT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (channel_id) REFERENCES chat_channels(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    this.runMigration('010_create_user_blocks_table', `
+      CREATE TABLE IF NOT EXISTS user_blocks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        blocker_id INTEGER NOT NULL,
+        blocked_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(blocker_id, blocked_id),
+        FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    this.runMigration('011_create_match_invites_table', `
+      CREATE TABLE IF NOT EXISTS match_invites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_user_id INTEGER NOT NULL,
+        to_user_id INTEGER NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'expired')),
+        match_type VARCHAR(20) DEFAULT 'casual' CHECK (match_type IN ('casual', 'ranked')),
+        expires_at DATETIME NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     console.log('Database migrations completed');
   }
 

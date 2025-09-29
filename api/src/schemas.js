@@ -230,6 +230,43 @@ const schemas = {
     }
   },
 
+  // Chat schemas
+  sendMessage: {
+    body: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', minLength: 1, maxLength: 1000 },
+        messageType: { type: 'string', enum: ['text', 'system', 'match_invite'], default: 'text' },
+        metadata: { type: ['object', 'null'] }
+      },
+      required: ['message'],
+      additionalProperties: false
+    }
+  },
+
+  createMatchInvite: {
+    body: {
+      type: 'object',
+      properties: {
+        toUserId: { type: 'number' },
+        matchType: { type: 'string', enum: ['casual', 'ranked'], default: 'casual' }
+      },
+      required: ['toUserId'],
+      additionalProperties: false
+    }
+  },
+
+  respondToInvite: {
+    body: {
+      type: 'object',
+      properties: {
+        response: { type: 'string', enum: ['accepted', 'declined'] }
+      },
+      required: ['response'],
+      additionalProperties: false
+    }
+  },
+
   // Generic error response
   error: {
     type: 'object',

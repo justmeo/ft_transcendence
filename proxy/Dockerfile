@@ -3,8 +3,14 @@ FROM nginx:alpine
 # Install openssl for certificate generation
 RUN apk add --no-cache openssl
 
+FROM nginx:alpine
+
+# Copy static files
+COPY ../web/dist/ /usr/share/nginx/html/
+
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY default.conf /etc/nginx/conf.d/default.conf
 
 # Generate self-signed certificates at build time
 RUN mkdir -p /etc/nginx/certs && \

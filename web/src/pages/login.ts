@@ -13,56 +13,36 @@ export class LoginPage implements Page {
 
     return `
       <div class="page">
-        <div style="max-width: 400px; margin: 2rem auto;">
-          <div class="card">
-            <h2 style="text-align: center; margin-bottom: 2rem;">🎮 Login to ft_transcendence</h2>
-            
-            <form id="login-form">
-              <div style="margin-bottom: 1.5rem;">
-                <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email:</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  name="email"
-                  required
-                  style="width: 100%; padding: 0.75rem;"
-                  placeholder="Enter your email"
-                >
-                <div id="email-error" class="error-message"></div>
-              </div>
-
-              <div style="margin-bottom: 1.5rem;">
-                <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password:</label>
-                <input 
-                  type="password" 
-                  id="password" 
-                  name="password"
-                  required
-                  style="width: 100%; padding: 0.75rem;"
-                  placeholder="Enter your password"
-                >
-                <div id="password-error" class="error-message"></div>
-              </div>
-
-              <div id="form-error" class="error-message" style="margin-bottom: 1rem;"></div>
-
-              <button 
-                type="submit" 
-                id="login-btn"
-                class="btn" 
-                style="width: 100%; margin-bottom: 1rem;">
-                Login
-              </button>
-            </form>
-
-            <div style="text-align: center; margin-top: 1.5rem;">
-              <p style="margin-bottom: 0.5rem;">Don't have an account?</p>
-              <a href="/signup" class="btn btn-secondary">Create Account</a>
+      <div class="max-w-md mx-auto">
+        <div class="card">
+          <h2 class="text-center text-2xl font-bold mb-8 text-primary">Welcome Back</h2>
+          
+          <form id="login-form">
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input type="email" id="email" name="email" required>
+              <div id="email-error" class="error-message"></div>
             </div>
+            
+            <div class="form-group">
+              <label for="password">Password:</label>
+              <input type="password" id="password" name="password" required>
+              <div id="password-error" class="error-message"></div>
+            </div>
+            
+            <div id="form-error" class="error-message mb-4"></div>
+            
+            <button type="submit" class="btn w-full mb-4">
+              Sign In
+            </button>
+          </form>
+          
+          <div class="text-center">
+            <p class="mb-4 text-text-muted">Don't have an account?</p>
+            <a href="/signup" class="btn btn-secondary">Create Account</a>
           </div>
         </div>
-
-        <style>
+      </div>        <style>
           .error-message {
             color: var(--error);
             font-size: 0.875rem;

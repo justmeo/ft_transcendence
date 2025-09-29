@@ -383,6 +383,33 @@ class TournamentService {
 
     return { tournaments, total, limit, offset };
   }
+
+  // Notify participants about upcoming matches
+  notifyUpcomingMatches(tournamentId) {
+    const chatService = require('./chat-service');
+    
+    // Get next pending matches
+    const nextMatches = database.query(`
+      SELECT m.id, m.match_number, m.round_number,
+             p1.display_name as player1_name,
+             p2.display_name as player2_name
+      FROM matches m
+      JOIN users p1 ON m.player1_id = p1.id
+      JOIN users p2 ON m.player2_id = p2.id
+      WHERE m.tournament_id = ? AND m.status = 'pending'
+      ORDER BY m.round_number, m.match_number
+      LIMIT 3
+    `, [tournamentId]);
+
+    nextMatches.forEach(match => {
+      chatService.notifyTournamentMatch(
+        tournamentId, 
+        match.id, 
+        match.player1_name, 
+        match.player2_name
+      );
+    });
+  }
 }
 
 module.exports = new TournamentService();

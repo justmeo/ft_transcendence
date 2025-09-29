@@ -1,28 +1,40 @@
 import { Page } from '../router';
 import { PongEngine } from '../game/pong';
+import { EnhancedPongEngine } from '../game/pong-ai';
 import { TournamentManager } from '../game/tournament-manager';
+import { WebSocketGameClient } from '../services/websocket-game-client';
+import { AuthService } from '../services/auth-service';
 
 export class PlayPage implements Page {
   private pongGame: PongEngine | null = null;
-  private tournamentManager: TournamentManager;
+  private tournamentManager: TournamentManager | null = null;
+  private wsGameClient: WebSocketGameClient | null = null;
+  private authService: AuthService;
   private currentMatchId: string | null = null;
   private player1Alias: string | null = null;
   private player2Alias: string | null = null;
+  private isOnlineMatch: boolean = false;
 
   render(): string {
-    // Initialize tournament manager
+    // Initialize services
     this.tournamentManager = new TournamentManager();
+    this.authService = new AuthService();
     
-    // Parse URL parameters for tournament matches
+    // Parse URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     this.currentMatchId = urlParams.get('match');
     this.player1Alias = urlParams.get('p1');
     this.player2Alias = urlParams.get('p2');
+    this.isOnlineMatch = urlParams.get('online') === 'true';
     
-    // Clean up existing game when re-rendering
+    // Clean up existing connections
     if (this.pongGame) {
       this.pongGame.stopGame();
       this.pongGame = null;
+    }
+    if (this.wsGameClient) {
+      this.wsGameClient.disconnect();
+      this.wsGameClient = null;
     }
 
     setTimeout(() => this.initializeGame(), 0);

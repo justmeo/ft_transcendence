@@ -18,26 +18,53 @@ export class HealthChecker {
   }
 
   private async checkHealth(): Promise<void> {
-    if (!this.indicator) return;
-
     try {
-      const response = await fetch('/api/health');
-      const data = await response.json();
-      
-      if (data.ok) {
-        this.updateStatus('✅ Healthy', 'success');
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch('/api/health', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        credentials: 'include'
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        this.updateStatus(true, `API Online`);
+        console.log('Health check successful:', data);
       } else {
-        this.updateStatus('❌ Error', 'error');
+        this.updateStatus(false, `API Error: ${response.status}`);
+        console.warn('Health check failed with status:', response.status);
       }
     } catch (error) {
-      this.updateStatus('❌ Offline', 'error');
+      let errorMessage = 'API Offline';
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'API Timeout';
+        } else if (error.message.includes('fetch')) {
+          errorMessage = 'Connection Failed';
+        }
+      }
+      
+      this.updateStatus(false, errorMessage);
+      console.error('Health check failed:', error);
     }
   }
 
-  private updateStatus(text: string, status: 'loading' | 'success' | 'error'): void {
-    if (!this.indicator) return;
+  private updateStatus(isOnline: boolean, message: string): void {
+    if (!this.statusElement) return;
+
+    this.statusElement.textContent = message;
+    this.statusElement.className = isOnline ? 'status-online' : 'status-offline';
     
-    this.indicator.textContent = text;
-    this.indicator.className = status;
+    // Update color based on status
+    this.statusElement.style.color = isOnline ? '#10b981' : '#ef4444';
   }
 }

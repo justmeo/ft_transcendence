@@ -16,9 +16,9 @@ export class TournamentPage implements Page {
     setTimeout(() => this.loadData(), 0);
 
     return `
-      <div class="page">
+      <div class="max-w-7xl mx-auto px-4">
         <div id="tournament-content">
-          <div style="text-align: center; padding: 2rem;">
+          <div class="text-center py-8">
             <div class="loading-spinner">Loading tournaments...</div>
           </div>
         </div>
@@ -140,18 +140,18 @@ export class TournamentPage implements Page {
     if (!content) return;
 
     content.innerHTML = `
-      <h2>🏆 Tournaments</h2>
-      <p>Create and join tournaments to compete against other players!</p>
+      <h2 class="text-3xl font-bold mb-4">🏆 Tournaments</h2>
+      <p class="text-text-muted mb-8">Create and join tournaments to compete against other players!</p>
       
-      <div style="margin: 2rem 0;">
+      <div class="mb-8">
         <button id="create-tournament-btn" class="btn">Create New Tournament</button>
       </div>
 
-      <div style="margin-bottom: 2rem;">
-        <h3>Active & Upcoming Tournaments</h3>
-        <div id="tournaments-list">
+      <div class="mb-8">
+        <h3 class="text-2xl font-semibold mb-6">Active & Upcoming Tournaments</h3>
+        <div id="tournaments-list" class="space-y-4">
           ${tournaments.length === 0 ? 
-            '<div style="text-align: center; padding: 2rem; opacity: 0.6;">No tournaments available</div>' :
+            '<div class="text-center py-8 text-text-muted">No tournaments available</div>' :
             tournaments.map(tournament => this.renderTournamentCard(tournament)).join('')
           }
         </div>

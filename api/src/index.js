@@ -4,6 +4,8 @@ const schemas = require('./schemas');
 const securityPlugin = require('./security');
 const authService = require('./auth-service');
 const tournamentService = require('./tournament-service');
+const matchHub = require('./match-hub');
+const chatService = require('./chat-service');
 
 // Initialize Fastify with configuration
 const fastify = require('fastify')({
@@ -40,6 +42,9 @@ fastify.setSchemaErrorFormatter((errors, dataVar) => {
   }));
   return error;
 });
+
+// Register WebSocket support
+fastify.register(require('@fastify/websocket'));
 
 // Register cookie and session support
 fastify.register(require('@fastify/cookie'));
@@ -433,7 +438,307 @@ fastify.register(async function (fastify) {
       }
     });
   });
+
+        }
+    });
+
+    // Chat routes
+    fastify.get('/chat/channels', {
+      preHandler: requireAuth
+    }, async (request, reply) => {
+      try {
+        const channels = chatService.getUserChannels(request.session.userId);
+        reply.send({ channels });
+      } catch (error) {
+        reply.status(500).send({
+          error: 'InternalServerError',
+          message: 'Failed to fetch chat channels',
+          statusCode: 500
+        });
+      }
+    });
+
+    fastify.get('/chat/channels/:channelId/messages', {
+      preHandler: requireAuth,
+      schema: {
+        querystring: {
+          type: 'object',
+          properties: {
+            limit: { type: 'number', minimum: 1, maximum: 100, default: 50 },
+            offset: { type: 'number', minimum: 0, default: 0 }
+          }
+        }
+      }
+    }, async (request, reply) => {
+      try {
+        const messages = chatService.getChannelMessages(
+          request.session.userId,
+          request.params.channelId,
+          request.query.limit,
+          request.query.offset
+        );
+        reply.send({ messages });
+      } catch (error) {
+        reply.status(403).send({
+          error: 'AccessDenied',
+          message: error.message,
+          statusCode: 403
+        });
+      }
+    });
+
+    fastify.post('/chat/channels/:channelId/messages', {
+      preHandler: requireAuth,
+      schema: {
+        body: schemas.sendMessage.body
+      }
+    }, async (request, reply) => {
+      try {
+        const message = chatService.sendMessage(
+          request.session.userId,
+          request.params.channelId,
+          request.body.message,
+          request.body.messageType,
+          request.body.metadata
+        );
+        reply.send(message);
+      } catch (error) {
+        reply.status(400).send({
+          error: 'ChatError',
+          message: error.message,
+          statusCode: 400
+        });
+      }
+    });
+
+    fastify.post('/chat/dm/:userId', {
+      preHandler: requireAuth
+    }, async (request, reply) => {
+      try {
+        const channel = chatService.getOrCreateDMChannel(
+          request.session.userId,
+          parseInt(request.params.userId)
+        );
+        reply.send(channel);
+      } catch (error) {
+        reply.status(400).send({
+          error: 'ChatError',
+          message: error.message,
+          statusCode: 400
+        });
+      }
+    });
+
+    // Block management
+    fastify.post('/users/:userId/block', {
+      preHandler: requireAuth
+    }, async (request, reply) => {
+      try {
+        const result = chatService.blockUser(
+          request.session.userId,
+          parseInt(request.params.userId)
+        );
+        reply.send(result);
+      } catch (error) {
+        reply.status(400).send({
+          error: 'BlockError',
+          message: error.message,
+          statusCode: 400
+        });
+      }
+    });
+
+    fastify.delete('/users/:userId/block', {
+      preHandler: requireAuth
+    }, async (request, reply) => {
+      try {
+        const result = chatService.unblockUser(
+          request.session.userId,
+          parseInt(request.params.userId)
+        );
+        reply.send(result);
+      } catch (error) {
+        reply.status(400).send({
+          error: 'UnblockError',
+          message: error.message,
+          statusCode: 400
+        });
+      }
+    });
+
+    fastify.get('/profile/blocked-users', {
+      preHandler: requireAuth
+    }, async (request, reply) => {
+      try {
+        const blockedUsers = chatService.getBlockedUsers(request.session.userId);
+        reply.send({ blockedUsers });
+      } catch (error) {
+        reply.status(500).send({
+          error: 'InternalServerError',
+          message: 'Failed to fetch blocked users',
+          statusCode: 500
+        });
+      }
+    });
+
+    // Match invites
+    fastify.post('/match-invites', {
+      preHandler: requireAuth,
+      schema: {
+        body: schemas.createMatchInvite.body
+      }
+    }, async (request, reply) => {
+      try {
+        const invite = chatService.createMatchInvite(
+          request.session.userId,
+          request.body.toUserId,
+          request.body.matchType
+        );
+        reply.send(invite);
+      } catch (error) {
+        reply.status(400).send({
+          error: 'InviteError',
+          message: error.message,
+          statusCode: 400
+        });
+      }
+    });
+
+    fastify.post('/match-invites/:inviteId/respond', {
+      preHandler: requireAuth,
+      schema: {
+        body: schemas.respondToInvite.body
+      }
+    }, async (request, reply) => {
+      try {
+        const result = chatService.respondToMatchInvite(
+          parseInt(request.params.inviteId),
+          request.session.userId,
+          request.body.response
+        );
+        reply.send(result);
+      } catch (error) {
+        reply.status(400).send({
+          error: 'InviteError',
+          message: error.message,
+          statusCode: 400
+        });
+      }
+    });
+
+    fastify.get('/match-invites', {
+      preHandler: requireAuth
+    }, async (request, reply) => {
+      try {
+        const invites = chatService.getUserInvites(request.session.userId);
+        reply.send({ invites });
+      } catch (error) {
+        reply.status(500).send({
+          error: 'InternalServerError',
+          message: 'Failed to fetch invites',
+          statusCode: 500
+        });
+      }
+    });
+
+    // User search
+    fastify.get('/users/search', {
+      preHandler: requireAuth,
+      schema: {
+        querystring: {
+          type: 'object',
+          properties: {
+            q: { type: 'string', minLength: 1 },
+            limit: { type: 'number', minimum: 1, maximum: 50, default: 10 }
+          },
+          required: ['q']
+        }
+      }
+    }, async (request, reply) => {
+      try {
+        const users = chatService.searchUsers(
+          request.query.q,
+          request.session.userId,
+          request.query.limit
+        );
+        reply.send({ users });
+      } catch (error) {
+        reply.status(500).send({
+          error: 'InternalServerError',
+          message: 'Failed to search users',
+          statusCode: 500
+        });
+      }
+    });
+  }, { prefix: '/api' });
+
+  // Health check endpoint
+  fastify.get('/health', async (request, reply) => {
+    try {
+      // Test database connection
+      const dbTest = database.queryOne('SELECT 1 as test');
+      
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        database: dbTest ? 'connected' : 'error',
+        uptime: process.uptime()
+      };
+    } catch (error) {
+      reply.status(503).send({
+        status: 'error',
+        message: 'Database connection failed',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // WebSocket routes
+  fastify.register(async function (fastify) {
+    // WebSocket endpoint for match connections
+    fastify.get('/ws/match/:matchId', { websocket: true }, async (connection, request) => {
+      const { socket } = connection;
+      const { matchId } = request.params;
+
+      // WebSocket session authentication
+      let userId = null;
+      
+      // Parse session from query string or headers (WebSocket doesn't support cookies directly)
+      const sessionId = request.query.sessionId;
+      if (sessionId) {
+        // In a real implementation, you'd validate the session ID
+        // For now, we'll use a simple approach with query params
+        userId = parseInt(request.query.userId);
+      }
+
+      if (!userId) {
+        socket.send(JSON.stringify({
+          type: 'error',
+          message: 'Authentication required'
+        }));
+        socket.close();
+        return;
+      }
+
+      // Join match
+      const success = matchHub.joinMatch(matchId, userId, socket);
+      if (!success) {
+        socket.close();
+      }
+    });
+
+    // Get match hub status (for debugging)
+    fastify.get('/ws/status', async (request, reply) => {
+      return {
+        activeMatches: matchHub.getActiveMatchesCount(),
+        connectedClients: matchHub.clients.size
+      };
+    });
+    });
+
 }, { prefix: '/api' });
+
+// Start server
 
 // Graceful shutdown handling
 const gracefulShutdown = async (signal) => {
@@ -467,21 +772,16 @@ process.on('unhandledRejection', (reason, promise) => {
 // Start server
 const start = async () => {
   try {
-    // Initialize database
-    await database.initialize();
-    
-    // Start server
-    await fastify.listen({ 
-      port: config.port, 
-      host: config.host 
-    });
-    
-    console.log(`🚀 API server listening on ${config.host}:${config.port}`);
-    console.log(`📊 Environment: ${config.nodeEnv}`);
-    console.log(`🗄️  Database: ${config.database.file}`);
-    
+    console.log('🚀 Starting ft_transcendence API server...');
+    await fastify.listen({ port: 8080, host: '0.0.0.0' });
+    console.log('✅ Server running on http://0.0.0.0:8080');
+    console.log('📋 Available routes:');
+    console.log('   GET  /api/health - Health check');
+    console.log('   POST /api/auth/login - User login');
+    console.log('   GET  /api/chat/channels - Chat channels');
   } catch (err) {
-    fastify.log.error(err);
+    console.error('❌ Server startup failed:', err.message);
+    console.error('Stack trace:', err.stack);
     process.exit(1);
   }
 };
