@@ -31,29 +31,34 @@ const schemas = {
     }
   },
 
-  // User registration
-  registerUser: {
+  // Auth signup
+  authSignup: {
     body: {
       type: 'object',
       properties: {
-        username: { 
-          type: 'string', 
-          minLength: 3, 
-          maxLength: 50,
-          pattern: '^[a-zA-Z0-9_-]+$'
-        },
         email: { 
           type: 'string', 
           format: 'email',
-          maxLength: 100
+          maxLength: 255
         },
         password: { 
           type: 'string', 
           minLength: 6, 
           maxLength: 100
+        },
+        displayName: {
+          type: 'string',
+          minLength: 3,
+          maxLength: 50,
+          pattern: '^[a-zA-Z0-9_]+$'
+        },
+        avatarUrl: {
+          type: 'string',
+          format: 'uri',
+          maxLength: 500
         }
       },
-      required: ['username', 'email', 'password'],
+      required: ['email', 'password', 'displayName'],
       additionalProperties: false
     },
     response: {
@@ -76,39 +81,44 @@ const schemas = {
     }
   },
 
-  // User login
-  loginUser: {
+  // Auth login
+  authLogin: {
     body: {
       type: 'object',
       properties: {
-        username: { type: 'string', minLength: 1 },
+        email: { type: 'string', format: 'email' },
         password: { type: 'string', minLength: 1 }
       },
-      required: ['username', 'password'],
+      required: ['email', 'password'],
       additionalProperties: false
-    },
-    response: {
-      200: {
-        type: 'object',
-        properties: {
-          token: { type: 'string' },
-          user: {
-            type: 'object',
-            properties: {
-              id: { type: 'number' },
-              username: { type: 'string' },
-              email: { type: 'string' }
-            }
-          }
-        }
-      },
-      401: {
-        type: 'object',
-        properties: {
-          error: { type: 'string' },
-          message: { type: 'string' }
-        }
-      }
+    }
+  },
+
+  // User response (without password)
+  userResponse: {
+    type: 'object',
+    properties: {
+      id: { type: 'number' },
+      email: { type: 'string' },
+      display_name: { type: 'string' },
+      avatar_url: { type: ['string', 'null'] },
+      created_at: { type: 'string' },
+      updated_at: { type: 'string' }
+    }
+  },
+
+  // User stats response
+  userStatsResponse: {
+    type: 'object',
+    properties: {
+      totalGames: { type: 'number' },
+      wins: { type: 'number' },
+      losses: { type: 'number' },
+      winRate: { type: 'string' },
+      rank: { type: 'string' },
+      rating: { type: 'number' },
+      longestWinStreak: { type: 'number' },
+      favoriteOpponent: { type: ['string', 'null'] }
     }
   },
 
@@ -171,6 +181,52 @@ const schemas = {
           offset: { type: 'number' }
         }
       }
+    }
+  },
+
+  // Tournament schemas
+  createTournament: {
+    body: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', minLength: 3, maxLength: 255 },
+        type: { type: 'string', enum: ['single-elimination', 'round-robin'] },
+        maxParticipants: { type: ['number', 'null'], minimum: 2, maximum: 128 }
+      },
+      required: ['name', 'type'],
+      additionalProperties: false
+    }
+  },
+
+  tournamentResponse: {
+    type: 'object',
+    properties: {
+      id: { type: 'number' },
+      name: { type: 'string' },
+      type: { type: 'string' },
+      status: { type: 'string' },
+      max_participants: { type: ['number', 'null'] },
+      participant_count: { type: 'number' },
+      created_by: { type: 'number' },
+      creator_name: { type: 'string' },
+      winner_id: { type: ['number', 'null'] },
+      winner_name: { type: ['string', 'null'] },
+      created_at: { type: 'string' },
+      started_at: { type: ['string', 'null'] },
+      completed_at: { type: ['string', 'null'] }
+    }
+  },
+
+  recordMatchResult: {
+    body: {
+      type: 'object',
+      properties: {
+        winnerId: { type: 'number' },
+        player1Score: { type: 'number', minimum: 0 },
+        player2Score: { type: 'number', minimum: 0 }
+      },
+      required: ['winnerId', 'player1Score', 'player2Score'],
+      additionalProperties: false
     }
   },
 

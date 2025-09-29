@@ -50,9 +50,10 @@ class DatabaseManager {
     this.runMigration('001_create_users_table', `
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
+        display_name VARCHAR(50) UNIQUE NOT NULL,
+        avatar_url VARCHAR(500) NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -81,6 +82,73 @@ class DatabaseManager {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (player1_id) REFERENCES users(id),
         FOREIGN KEY (player2_id) REFERENCES users(id)
+      )
+    `);
+
+    this.runMigration('004_create_tournaments_table', `
+      CREATE TABLE IF NOT EXISTS tournaments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR(255) NOT NULL,
+        type VARCHAR(20) NOT NULL CHECK (type IN ('single-elimination', 'round-robin')),
+        status VARCHAR(20) DEFAULT 'registration' CHECK (status IN ('registration', 'active', 'completed')),
+        max_participants INTEGER DEFAULT NULL,
+        created_by INTEGER NOT NULL,
+        winner_id INTEGER DEFAULT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        started_at DATETIME DEFAULT NULL,
+        completed_at DATETIME DEFAULT NULL,
+        FOREIGN KEY (created_by) REFERENCES users(id),
+        FOREIGN KEY (winner_id) REFERENCES users(id)
+      )
+    `);
+
+    this.runMigration('005_create_participants_table', `
+      CREATE TABLE IF NOT EXISTS participants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tournament_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        eliminated_at DATETIME DEFAULT NULL,
+        UNIQUE(tournament_id, user_id),
+        FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    this.runMigration('006_create_matches_table', `
+      CREATE TABLE IF NOT EXISTS matches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tournament_id INTEGER NOT NULL,
+        player1_id INTEGER NOT NULL,
+        player2_id INTEGER NOT NULL,
+        winner_id INTEGER DEFAULT NULL,
+        player1_score INTEGER DEFAULT 0,
+        player2_score INTEGER DEFAULT 0,
+        round_number INTEGER DEFAULT 1,
+        match_number INTEGER DEFAULT 1,
+        status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed')),
+        started_at DATETIME DEFAULT NULL,
+        completed_at DATETIME DEFAULT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+        FOREIGN KEY (player1_id) REFERENCES users(id),
+        FOREIGN KEY (player2_id) REFERENCES users(id),
+        FOREIGN KEY (winner_id) REFERENCES users(id)
+      )
+    `);
+
+    this.runMigration('007_create_results_table', `
+      CREATE TABLE IF NOT EXISTS results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tournament_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        final_position INTEGER NOT NULL,
+        wins INTEGER DEFAULT 0,
+        losses INTEGER DEFAULT 0,
+        total_score INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id)
       )
     `);
 

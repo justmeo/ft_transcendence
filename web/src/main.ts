@@ -1,8 +1,11 @@
 import { Router } from './router';
 import { HomePage } from './pages/home';
 import { PlayPage } from './pages/play';
-import { TournamentPage } from './pages/tournament';
+import { TournamentPage } from './pages/tournament-new';
 import { SettingsPage } from './pages/settings';
+import { LoginPage } from './pages/login';
+import { SignupPage } from './pages/signup';
+import { ProfilePage } from './pages/profile';
 import { HealthChecker } from './utils/health-checker';
 
 // Initialize router with routes
@@ -11,6 +14,9 @@ const router = new Router({
   '/play': PlayPage,
   '/tournament': TournamentPage,
   '/settings': SettingsPage,
+  '/login': LoginPage,
+  '/signup': SignupPage,
+  '/profile': ProfilePage,
 });
 
 // Initialize health checker
