@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../backend:/app
+      - /app/node_modules
+      - ../db:/app/db
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=sqlite:./db/database.db
+    env_file:
+      - ../.env
