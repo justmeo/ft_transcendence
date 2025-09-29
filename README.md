@@ -1,4 +1,3 @@
-# ft_transcendence
 # ft_transcendence 🎮  
 
 > A full-stack web application project from 42 School — building a **real-time multiplayer Pong platform** with modern web technologies, security best practices, and modular enhancements.  
@@ -107,9 +106,8 @@ The project focuses on:
 
 ### Prerequisites  
 - [Docker](https://www.docker.com/)  
-- [Node.js](https://nodejs.org/) (if using Fastify backend)  
-- [SQLite](https://www.sqlite.org/) (if database module chosen)  
-
+- [Node.js](https://nodejs.org/) 
+- [SQLite](https://www.sqlite.org/) 
 ### Installation  
 ```bash
 # Clone repository
