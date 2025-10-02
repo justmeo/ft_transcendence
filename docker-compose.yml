@@ -11,9 +11,16 @@ services:
       - API_HOST=${API_HOST:-0.0.0.0}
     expose:
       - "3000"
+    # volumes:
+    #   # Mount source code for live reload no need to rebuild
+    #   - ./api/src:/app/src
+    #   - ./api/package.json:/app/package.json
+    #   - ./db:/app/db
     networks:
       - ft_network
     restart: unless-stopped
+    # Add development command that watches for changes
+    # command: npm run dev
 
   proxy:
     build:
@@ -26,6 +33,10 @@ services:
       - NODE_ENV=development
       - FORCE_HTTPS=false
       - TRUST_PROXY=true
+    # volumes:
+    #   # Mount frontend files for live development
+    #   - ./web:/usr/share/nginx/html
+    #   - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - api
     networks:
