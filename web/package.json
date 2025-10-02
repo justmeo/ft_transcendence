@@ -1,15 +1,17 @@
 {
   "name": "ft-transcendence-web",
   "version": "1.0.0",
-  "description": "TypeScript SPA frontend for ft_transcendence",
+  "description": "Frontend for ft_transcendence",
+  "main": "src/main.ts",
   "scripts": {
-    "build": "npm run clean && esbuild src/main.ts --bundle --outfile=dist/js/app.js --minify --sourcemap && npm run copy-assets",
-    "dev": "npm run clean && esbuild src/main.ts --bundle --outfile=dist/js/app.js --sourcemap --watch & npm run copy-assets",
-    "clean": "rm -rf dist && mkdir -p dist/js dist/css",
-    "copy-assets": "cp src/index.html dist/ && cp src/styles.css dist/css/"
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "esbuild": "^0.19.0",
-    "typescript": "^5.0.0"
-  }
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {}
 }

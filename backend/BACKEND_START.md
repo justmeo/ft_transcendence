@@ -50,3 +50,7 @@ curl http://localhost:80/api/
 
 # Check if the proxy is handling requests correctly
 curl -v http://localhost:80/api/health
+
+
+# Check what files are being served by nginx
+docker exec -it ft_transcendence-proxy-1 ls -la /usr/share/nginx/html/

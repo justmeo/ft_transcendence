@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component classes for consistent styling */
+@layer components {
+  .card {
+    @apply bg-slate-800/80 backdrop-blur-sm rounded-xl border border-border-custom p-8 mb-8;
+  }
+  
+  .btn {
+    @apply inline-block px-6 py-3 bg-primary text-white no-underline rounded-lg border-none cursor-pointer text-base font-medium transition-all duration-200 hover:bg-indigo-600 hover:-translate-y-0.5 active:translate-y-0;
+  }
+  
+  .btn-secondary {
+    @apply bg-white/10 text-text-light border border-border-custom hover:bg-white/20 hover:border-primary;
+  }
+  
+  .btn-small {
+    @apply px-3 py-1.5 text-sm;
+  }
+  
+  .form-group {
+    @apply mb-6;
+  }
+  
+  .form-group label {
+    @apply block mb-2 font-medium;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    @apply w-full p-3 border border-border-custom rounded-md bg-white/5 text-text-light text-base focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10;
+  }
+  
+  .error-message {
+    @apply text-error text-sm mt-1 min-h-5;
+  }
+  
+  .error-message:empty {
+    @apply hidden;
+  }
+  
+  .nav-link {
+    @apply text-text-light no-underline transition-colors duration-200 hover:text-primary;
+  }
+  
+  .loading-spinner {
+    @apply text-primary text-lg;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-bg-dark to-slate-800 text-text-light min-h-screen font-sans antialiased;
+  }
+}

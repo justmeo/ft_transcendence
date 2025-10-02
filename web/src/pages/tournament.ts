@@ -1,5 +1,6 @@
 import { Page } from '../router';
-import { TournamentManager, Tournament, Match, Player } from '../game/tournament-manager';
+import { TournamentApiService, Tournament, Match, Participant } from '../services/tournament-api-service';
+import { AuthService } from '../services/auth-service';
 
 export class TournamentPage implements Page {
   private tournamentManager: TournamentManager;

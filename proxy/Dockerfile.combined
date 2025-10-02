@@ -3,8 +3,12 @@ FROM node:20-alpine AS web-builder
 
 WORKDIR /app
 
-# Copy web package files
+# Copy package files (create empty files if they don't exist)
 COPY web/package*.json ./
+RUN test -f package.json || echo '{"name":"ft-transcendence-web","version":"1.0.0","scripts":{"build":"echo No build needed"}}' > package.json
+
+# Copy configuration files
+COPY web/vite.config.js ./
 COPY web/tsconfig.json ./
 
 # Install dependencies
