@@ -13,11 +13,7 @@ services:
       - "3000"
     networks:
       - ft_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    restart: unless-stopped
 
   proxy:
     build:
@@ -34,6 +30,7 @@ services:
       - api
     networks:
       - ft_network
+    restart: unless-stopped
 
 networks:
   ft_network:
