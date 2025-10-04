@@ -106,7 +106,7 @@ export class PongEngine {
     this.canvas.height = this.config.canvasHeight;
     this.canvas.style.border = '2px solid #6366f1';
     this.canvas.style.borderRadius = '8px';
-    this.canvas.style.background = 'rgba(15, 23, 42, 0.8)';
+    this.canvas.style.background = 'rgba(0, 0, 0, 0.1)';
     this.canvas.style.display = 'block';
     this.canvas.style.margin = '0 auto';
     

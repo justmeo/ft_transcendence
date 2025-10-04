@@ -12,77 +12,52 @@ export class LoginPage implements Page {
     setTimeout(() => this.initializeEventHandlers(), 0);
 
     return `
-      <div class="login-page">
-        <div class="login-container">
-          <div class="login-card">
-            <h2 class="login-title">Welcome Back</h2>
+      <div class="main-content">
+        <div class="page">
+          <div class="login-container">
+            <h2>Welcome Back</h2>
+            <p>Sign in to your ft_transcendence account</p>
             
             <form id="login-form" class="login-form">
               <div class="form-group">
-                <label for="email" class="form-label">Email:</label>
-                <input type="email" id="email" name="email" required class="form-input">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email">
                 <div id="email-error" class="error-message"></div>
               </div>
               
               <div class="form-group">
-                <label for="password" class="form-label">Password:</label>
-                <input type="password" id="password" name="password" required class="form-input">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter your password">
                 <div id="password-error" class="error-message"></div>
               </div>
               
               <div id="form-error" class="error-message form-error"></div>
               
-              <button type="submit" class="login-btn">
+              <button type="submit" class="btn login-btn">
                 Sign In
               </button>
             </form>
             
             <div class="signup-link">
-              <p class="signup-text">Don't have an account?</p>
-              <a href="/signup" class="signup-btn" data-route>Create Account</a>
+              <p>Don't have an account?</p>
+              <a href="/signup" class="btn btn-secondary" data-route>Create Account</a>
             </div>
           </div>
         </div>
         
         <style>
-          .login-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          }
-          
           .login-container {
-            width: 100%;
-            max-width: 400px;
-          }
-          
-          .login-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-          }
-          
-          .login-title {
+            max-width: 420px;
+            margin: 0 auto;
             text-align: center;
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            color: #1a202c;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
           }
           
           .login-form {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
           }
           
           .form-group {
@@ -91,42 +66,19 @@ export class LoginPage implements Page {
             gap: 0.5rem;
           }
           
-          .form-label {
-            font-weight: 500;
-            color: #374151;
-            font-size: 0.875rem;
-          }
-          
-          .form-input {
-            padding: 0.875rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            background: #f9fafb;
-          }
-          
-          .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-          }
-          
-          .form-input.error {
-            border-color: #ef4444;
-            background: #fef2f2;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+          .form-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
           }
           
           .error-message {
-            color: #ef4444;
+            color: var(--error);
             font-size: 0.875rem;
-            margin-top: 0.25rem;
             min-height: 1.25rem;
             opacity: 0;
             transform: translateY(-4px);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
           }
           
           .error-message:not(:empty) {
@@ -135,63 +87,27 @@ export class LoginPage implements Page {
           }
           
           .form-error {
-            margin-bottom: 1rem;
             text-align: center;
             font-weight: 500;
+            margin-bottom: 1rem;
           }
           
           .login-btn {
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
             margin-top: 0.5rem;
-          }
-          
-          .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-          }
-          
-          .login-btn:active {
-            transform: translateY(0);
+            width: 100%;
+            justify-content: center;
           }
           
           .signup-link {
-            text-align: center;
             margin-top: 2rem;
             padding-top: 2rem;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid var(--border);
           }
           
-          .signup-text {
-            color: #6b7280;
+          .signup-link p {
+            color: var(--text-secondary);
             margin-bottom: 1rem;
-            font-size: 0.875rem;
-          }
-          
-          .signup-btn {
-            display: inline-block;
-            padding: 0.75rem 2rem;
-            background: transparent;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s ease;
-          }
-          
-          .signup-btn:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            font-size: 0.95rem;
           }
           
           .login-form.loading {
@@ -200,22 +116,14 @@ export class LoginPage implements Page {
           }
           
           .login-form.loading .login-btn {
-            background: #9ca3af;
+            background: var(--neutral);
             cursor: not-allowed;
+            box-shadow: none;
           }
           
-          @media (max-width: 480px) {
-            .login-page {
-              padding: 1rem;
-            }
-            
-            .login-card {
-              padding: 1.5rem;
-            }
-            
-            .login-title {
-              font-size: 1.75rem;
-            }
+          input.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
           }
         </style>
       </div>
@@ -319,7 +227,7 @@ export class LoginPage implements Page {
 
     // Show loading state
     form.classList.add('loading');
-    submitBtn.textContent = 'Logging in...';
+    submitBtn.textContent = 'Signing in...';
 
     try {
       // Attempt login

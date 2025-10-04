@@ -3,358 +3,320 @@ import { TournamentApiService, Tournament, Match, Participant } from '../service
 import { AuthService } from '../services/auth-service';
 
 export class TournamentPage implements Page {
-  private tournamentManager: TournamentManager;
+  private tournamentService: TournamentApiService;
+  private authService: AuthService;
+  private currentTournament: Tournament | null = null;
 
   constructor() {
-    this.tournamentManager = new TournamentManager();
+    this.tournamentService = new TournamentApiService();
+    this.authService = new AuthService();
   }
 
   render(): string {
-    setTimeout(() => this.initializeEventHandlers(), 0);
+    setTimeout(() => this.loadData(), 0);
 
-    const tournament = this.tournamentManager.getCurrentTournament();
-    
-    if (!tournament) {
-      return this.renderCreateTournament();
-    }
+    return `
+      <div class="max-w-7xl mx-auto px-4">
+        <div id="tournament-content">
+          <div class="text-center py-8">
+            <div class="loading-spinner">Loading tournaments...</div>
+          </div>
+        </div>
 
-    switch (tournament.status) {
-      case 'registration':
-        return this.renderRegistration(tournament);
-      case 'active':
-        return this.renderActiveTournament(tournament);
-      case 'completed':
-        return this.renderCompletedTournament(tournament);
-      default:
-        return this.renderCreateTournament();
+        <style>
+          .loading-spinner {
+            color: var(--primary);
+            font-size: 1.1rem;
+          }
+          
+          .tournament-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+          }
+          
+          .tournament-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+          }
+          
+          .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+          }
+          
+          .status-registration {
+            background: var(--success);
+            color: white;
+          }
+          
+          .status-active {
+            background: var(--warning);
+            color: black;
+          }
+          
+          .status-completed {
+            background: var(--text-muted);
+            color: white;
+          }
+          
+          .participant-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 0.5rem;
+          }
+          
+          .match-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--primary);
+          }
+        </style>
+      </div>
+    `;
+  }
+
+  private async loadData(): Promise<void> {
+    const content = document.getElementById('tournament-content');
+    if (!content) return;
+
+    try {
+      // Check authentication
+      const isAuthenticated = await this.authService.checkAuth();
+      if (!isAuthenticated) {
+        this.renderLoginRequired();
+        return;
+      }
+
+      // Load tournaments
+      const tournamentsData = await this.tournamentService.listTournaments();
+      this.renderTournamentsList(tournamentsData.tournaments);
+
+    } catch (error) {
+      this.renderError(error instanceof Error ? error.message : 'Failed to load tournaments');
     }
   }
 
-  private renderCreateTournament(): string {
-    return `
-      <div class="page">
-        <h2>🏆 Tournament Manager</h2>
-        <p>Create and manage your own Pong tournaments!</p>
-        
-        <div class="card" style="max-width: 500px; margin: 2rem auto;">
+  private renderLoginRequired(): void {
+    const content = document.getElementById('tournament-content');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div style="text-align: center; padding: 3rem;">
+        <h2>🔐 Authentication Required</h2>
+        <p style="margin: 1rem 0;">Please log in to participate in tournaments.</p>
+        <div style="margin-top: 2rem;">
+          <a href="/login" class="btn" style="margin-right: 1rem;">Login</a>
+          <a href="/signup" class="btn btn-secondary">Sign Up</a>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderError(message: string): void {
+    const content = document.getElementById('tournament-content');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div style="text-align: center; padding: 3rem;">
+        <h2>❌ Error</h2>
+        <p style="color: var(--error); margin: 1rem 0;">${message}</p>
+        <button onclick="window.location.reload()" class="btn">Retry</button>
+      </div>
+    `;
+  }
+
+  private renderTournamentsList(tournaments: Tournament[]): void {
+    const content = document.getElementById('tournament-content');
+    if (!content) return;
+
+    content.innerHTML = `
+      <h2 class="text-3xl font-bold mb-4">🏆 Tournaments</h2>
+      <p class="text-text-muted mb-8">Create and join tournaments to compete against other players!</p>
+      
+      <div class="mb-8">
+        <button id="create-tournament-btn" class="btn">Create New Tournament</button>
+      </div>
+
+      <div class="mb-8">
+        <h3 class="text-2xl font-semibold mb-6">Active & Upcoming Tournaments</h3>
+        <div id="tournaments-list" class="space-y-4">
+          ${tournaments.length === 0 ? 
+            '<div class="text-center py-8 text-text-muted">No tournaments available</div>' :
+            tournaments.map(tournament => this.renderTournamentCard(tournament)).join('')
+          }
+        </div>
+      </div>
+
+      <!-- Create Tournament Modal -->
+      <div id="create-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 400px; margin: 2rem;">
           <h3>Create New Tournament</h3>
           
-          <div style="margin: 1.5rem 0;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tournament Name:</label>
-            <input type="text" id="tournament-name" placeholder="Enter tournament name" 
-                   style="width: 100%; padding: 0.75rem; margin-bottom: 1rem;" value="Pong Championship">
-          </div>
-          
-          <div style="margin: 1.5rem 0;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tournament Type:</label>
-            <select id="tournament-type" style="width: 100%; padding: 0.75rem;">
-              <option value="single-elimination">Single Elimination</option>
-              <option value="round-robin">Round Robin</option>
-            </select>
-          </div>
-          
-          <button id="create-tournament" class="btn" style="width: 100%; margin-top: 1rem;">
-            Create Tournament
-          </button>
-        </div>
-        
-        <div class="cards">
-          <div class="card">
-            <h3>📋 Tournament Types</h3>
-            <div style="text-align: left; line-height: 1.8;">
-              <strong>Single Elimination:</strong> Lose once and you're out. Fast-paced brackets.<br>
-              <strong>Round Robin:</strong> Everyone plays everyone. Most wins wins.
+          <form id="create-form">
+            <div style="margin: 1rem 0;">
+              <label style="display: block; margin-bottom: 0.5rem;">Tournament Name:</label>
+              <input type="text" id="tournament-name" required style="width: 100%; padding: 0.75rem;" placeholder="Enter tournament name" maxlength="255">
             </div>
-          </div>
-          
-          <div class="card">
-            <h3>⚡ Features</h3>
-            <div style="text-align: left; line-height: 1.8;">
-              • Player registration system<br>
-              • Automatic bracket generation<br>
-              • Real-time match tracking<br>
-              • Persistent tournament state
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderRegistration(tournament: Tournament): string {
-    const players = this.tournamentManager.getPlayersList();
-    
-    return `
-      <div class="page">
-        <h2>🏆 ${tournament.name}</h2>
-        <p>Registration Phase - Add players to the tournament</p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-          <div class="card">
-            <h3>➕ Register Players</h3>
             
             <div style="margin: 1rem 0;">
-              <input type="text" id="player-alias" placeholder="Enter player alias" 
-                     style="width: 100%; padding: 0.75rem; margin-bottom: 1rem;"
-                     maxlength="20">
-              <button id="add-player" class="btn" style="width: 100%;">Add Player</button>
+              <label style="display: block; margin-bottom: 0.5rem;">Tournament Type:</label>
+              <select id="tournament-type" style="width: 100%; padding: 0.75rem;">
+                <option value="single-elimination">Single Elimination</option>
+                <option value="round-robin">Round Robin</option>
+              </select>
             </div>
             
-            <div style="margin-top: 1.5rem;">
-              <small style="opacity: 0.8;">
-                Tournament Type: ${tournament.type === 'single-elimination' ? 'Single Elimination' : 'Round Robin'}<br>
-                Minimum Players: 2
-              </small>
-            </div>
-          </div>
-          
-          <div class="card">
-            <h3>👥 Registered Players (${players.length})</h3>
-            
-            <div id="players-list" style="max-height: 200px; overflow-y: auto;">
-              ${players.map((player, index) => `
-                <div style="display: flex; justify-content: space-between; align-items: center; 
-                           padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                  <span>${index + 1}. ${player.alias}</span>
-                  <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" 
-                          data-player-id="${player.id}">Remove</button>
-                </div>
-              `).join('')}
-              ${players.length === 0 ? '<div style="text-align: center; opacity: 0.6; padding: 1rem;">No players registered yet</div>' : ''}
-            </div>
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin: 2rem 0;">
-          <button id="start-tournament" class="btn" ${players.length < 2 ? 'disabled' : ''} 
-                  style="margin-right: 1rem;">
-            Start Tournament (${players.length} players)
-          </button>
-          <button id="reset-tournament" class="btn btn-secondary">Reset Tournament</button>
-        </div>
-      </div>
-    `;
-  }
-
-  private renderActiveTournament(tournament: Tournament): string {
-    const currentMatch = this.tournamentManager.getCurrentMatch();
-    const upcomingMatches = this.tournamentManager.getUpcomingMatches();
-    const completedMatches = this.tournamentManager.getCompletedMatches();
-    const standings = this.tournamentManager.getStandings();
-    const stats = this.tournamentManager.getTournamentStats();
-
-    return `
-      <div class="page">
-        <h2>🏆 ${tournament.name}</h2>
-        <p>${tournament.type === 'single-elimination' ? 'Single Elimination' : 'Round Robin'} Tournament - ${stats?.progress}% Complete</p>
-        
-        ${currentMatch ? `
-          <div class="card" style="margin-bottom: 2rem; border: 2px solid var(--primary);">
-            <h3>🎮 Current Match</h3>
-            <div style="text-align: center; margin: 1.5rem 0;">
-              <div style="font-size: 1.5rem; margin-bottom: 1rem;">
-                <strong>${currentMatch.player1.alias}</strong> vs <strong>${currentMatch.player2.alias}</strong>
-              </div>
-              <button id="play-match" class="btn" data-match-id="${currentMatch.id}">
-                Play Now
-              </button>
-            </div>
-          </div>
-        ` : ''}
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-          <div class="card">
-            <h3>📊 Tournament Progress</h3>
             <div style="margin: 1rem 0;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Completed Matches:</span>
-                <span>${stats?.completedMatches} / ${stats?.totalMatches}</span>
-              </div>
-              <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
-                <div style="background: var(--primary); height: 100%; width: ${stats?.progress}%; transition: width 0.3s ease;"></div>
-              </div>
+              <label style="display: block; margin-bottom: 0.5rem;">Max Participants (optional):</label>
+              <input type="number" id="max-participants" min="2" max="128" style="width: 100%; padding: 0.75rem;" placeholder="Leave empty for unlimited">
             </div>
-          </div>
-          
-          <div class="card">
-            <h3>🏅 Current Standings</h3>
-            <div style="margin-top: 1rem;">
-              ${standings.slice(0, 5).map((player, index) => `
-                <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
-                  <span>${index + 1}. ${player.alias}</span>
-                  <span>${player.wins}W - ${player.losses}L</span>
-                </div>
-              `).join('')}
+            
+            <div id="create-error" style="color: var(--error); margin: 1rem 0; min-height: 1.5rem;"></div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+              <button type="submit" class="btn" style="flex: 1;">Create</button>
+              <button type="button" id="cancel-create" class="btn btn-secondary" style="flex: 1;">Cancel</button>
             </div>
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 2rem;">
-          <button id="reset-tournament" class="btn btn-secondary">Reset Tournament</button>
+          </form>
         </div>
       </div>
     `;
+
+    this.initializeEventHandlers();
   }
 
-  private renderCompletedTournament(tournament: Tournament): string {
-    const standings = this.tournamentManager.getStandings();
+  private renderTournamentCard(tournament: Tournament): string {
+    const statusClass = `status-${tournament.status}`;
+    const canJoin = tournament.status === 'registration' && 
+                   (!tournament.max_participants || tournament.participant_count < tournament.max_participants);
 
     return `
-      <div class="page">
-        <h2>🏆 ${tournament.name} - COMPLETED!</h2>
-        <p>Tournament finished! Congratulations to all participants.</p>
-        
-        <div class="card" style="margin-bottom: 2rem; border: 2px solid var(--success); text-align: center;">
-          <h3>🥇 Champion</h3>
-          <div style="font-size: 2rem; margin: 1rem 0; color: var(--success);">
-            ${tournament.winner?.alias || 'Unknown'}
+      <div class="tournament-card" data-tournament-id="${tournament.id}">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+          <div>
+            <h4 style="margin: 0 0 0.5rem 0;">${tournament.name}</h4>
+            <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">
+              ${tournament.type === 'single-elimination' ? 'Single Elimination' : 'Round Robin'} • 
+              Created by ${tournament.creator_name}
+            </p>
           </div>
-          <div style="opacity: 0.8;">
-            ${tournament.winner?.wins} wins - ${tournament.winner?.losses} losses
+          <span class="status-badge ${statusClass}">${tournament.status.toUpperCase()}</span>
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+          <div style="font-size: 0.9rem; opacity: 0.8;">
+            Participants: ${tournament.participant_count}${tournament.max_participants ? `/${tournament.max_participants}` : ''}
+            ${tournament.winner_name ? `• Winner: ${tournament.winner_name}` : ''}
           </div>
         </div>
         
-        <div class="card">
-          <h3>🏅 Final Standings</h3>
-          <div style="margin-top: 1rem;">
-            ${standings.map((player, index) => `
-              <div style="display: flex; justify-content: space-between; padding: 0.5rem; 
-                         ${index === 0 ? 'background: rgba(16, 185, 129, 0.2); border-radius: 4px;' : ''}">
-                <span>
-                  ${index + 1}. ${player.alias}
-                  ${index === 0 ? '👑' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''}
-                </span>
-                <span>${player.wins}W - ${player.losses}L</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 2rem;">
-          <button id="new-tournament" class="btn">Create New Tournament</button>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <button onclick="tournamentPage.viewTournament(${tournament.id})" class="btn btn-secondary">
+            View Details
+          </button>
+          ${canJoin ? `
+            <button onclick="tournamentPage.joinTournament(${tournament.id})" class="btn">
+              Join Tournament
+            </button>
+          ` : ''}
         </div>
       </div>
     `;
   }
 
   private initializeEventHandlers(): void {
-    // Create tournament
-    document.getElementById('create-tournament')?.addEventListener('click', () => {
-      const nameInput = document.getElementById('tournament-name') as HTMLInputElement;
-      const typeSelect = document.getElementById('tournament-type') as HTMLSelectElement;
-      
-      if (nameInput?.value.trim()) {
-        this.tournamentManager.createTournament(
-          nameInput.value.trim(),
-          typeSelect?.value as 'round-robin' | 'single-elimination'
-        );
-        this.refresh();
+    const createBtn = document.getElementById('create-tournament-btn');
+    const modal = document.getElementById('create-modal');
+    const cancelBtn = document.getElementById('cancel-create');
+    const form = document.getElementById('create-form');
+
+    createBtn?.addEventListener('click', () => {
+      if (modal) modal.style.display = 'flex';
+    });
+
+    cancelBtn?.addEventListener('click', () => {
+      if (modal) modal.style.display = 'none';
+    });
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await this.handleCreateTournament();
+    });
+
+    // Close modal when clicking outside
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
       }
-    });
-
-    // Add player
-    document.getElementById('add-player')?.addEventListener('click', () => {
-      this.addPlayer();
-    });
-
-    document.getElementById('player-alias')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        this.addPlayer();
-      }
-    });
-
-    // Remove player buttons
-    document.querySelectorAll('[data-player-id]').forEach(button => {
-      button.addEventListener('click', (e) => {
-        const playerId = (e.target as HTMLElement).dataset.playerId;
-        if (playerId) this.removePlayer(playerId);
-      });
-    });
-
-    // Start tournament
-    document.getElementById('start-tournament')?.addEventListener('click', () => {
-      try {
-        this.tournamentManager.startTournament();
-        this.refresh();
-      } catch (error) {
-        alert(error instanceof Error ? error.message : 'Failed to start tournament');
-      }
-    });
-
-    // Reset tournament
-    document.getElementById('reset-tournament')?.addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset the tournament? This cannot be undone.')) {
-        this.tournamentManager.resetTournament();
-        this.refresh();
-      }
-    });
-
-    // Play match
-    document.getElementById('play-match')?.addEventListener('click', (e) => {
-      const matchId = (e.target as HTMLElement).dataset.matchId;
-      if (matchId) {
-        this.startMatch(matchId);
-      }
-    });
-
-    // New tournament
-    document.getElementById('new-tournament')?.addEventListener('click', () => {
-      this.tournamentManager.resetTournament();
-      this.refresh();
     });
   }
 
-  private addPlayer(): void {
-    const input = document.getElementById('player-alias') as HTMLInputElement;
-    const alias = input?.value.trim();
-    
-    if (!alias) {
-      alert('Please enter a player alias');
+  private async handleCreateTournament(): Promise<void> {
+    const nameInput = document.getElementById('tournament-name') as HTMLInputElement;
+    const typeSelect = document.getElementById('tournament-type') as HTMLSelectElement;
+    const maxParticipantsInput = document.getElementById('max-participants') as HTMLInputElement;
+    const errorDiv = document.getElementById('create-error');
+    const modal = document.getElementById('create-modal');
+
+    const name = nameInput.value.trim();
+    const type = typeSelect.value as 'single-elimination' | 'round-robin';
+    const maxParticipants = maxParticipantsInput.value ? parseInt(maxParticipantsInput.value) : undefined;
+
+    if (!name) {
+      if (errorDiv) errorDiv.textContent = 'Tournament name is required';
       return;
     }
 
     try {
-      this.tournamentManager.registerPlayer(alias);
-      input.value = '';
+      if (errorDiv) errorDiv.textContent = '';
+      
+      await this.tournamentService.createTournament(name, type, maxParticipants);
+      
+      if (modal) modal.style.display = 'none';
       this.refresh();
+      
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to add player');
+      if (errorDiv) {
+        errorDiv.textContent = error instanceof Error ? error.message : 'Failed to create tournament';
+      }
     }
   }
 
-  private removePlayer(playerId: string): void {
+  // Methods exposed for onclick handlers
+  async joinTournament(tournamentId: number): Promise<void> {
     try {
-      this.tournamentManager.removePlayer(playerId);
+      await this.tournamentService.joinTournament(tournamentId);
+      alert('Successfully joined tournament!');
       this.refresh();
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to remove player');
+      alert(error instanceof Error ? error.message : 'Failed to join tournament');
     }
   }
 
-  private startMatch(matchId: string): void {
-    try {
-      const match = this.tournamentManager.startMatch(matchId);
-      
-      // Navigate to play page with match data
-      const url = `/play?match=${matchId}&p1=${encodeURIComponent(match.player1.alias)}&p2=${encodeURIComponent(match.player2.alias)}`;
-      window.history.pushState({}, '', url);
-      
-      // Dispatch custom event to trigger router navigation
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to start match');
-    }
+  async viewTournament(tournamentId: number): Promise<void> {
+    // Navigate to tournament detail view
+    window.history.pushState({}, '', `/tournament/${tournamentId}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
   }
 
   private refresh(): void {
-    // Re-render the page
-    const content = document.getElementById('content');
-    if (content) {
-      content.innerHTML = this.render();
-    }
+    this.loadData();
   }
 
   public cleanup(): void {
     // Cleanup when navigating away
   }
 }
+
+// Make tournament page methods globally accessible
+(window as any).tournamentPage = new TournamentPage();
