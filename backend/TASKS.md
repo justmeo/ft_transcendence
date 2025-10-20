@@ -15,13 +15,14 @@
 - Secure registration/login.
 - JWT-based sessions.
 - Password hashing (bcrypt/argon2).
-- 2FA (TOTP app, SMS, or email).
-- Remote authentication with Google Sign-in (OAuth2).
+- 2FA (TOTP app, SMS, or email). [LEAVE TILL THE END]
+- Remote authentication with Google Sign-in (OAuth2). [LEAVE TILL THE END]
 
 ## Gameplay Backend
 
 - Real-time Pong logic handled server-side.
-- WebSocket connections for multiplayer.
+- WebSocket connection for live chat.
+- WebSocket connections for multiplayer. [ONLY IF YOU WANT REMOTE PLAYERS MODULE BUT WARNING! IT'S DIFFICULT]
 - Tournament system (matchmaking, brackets, scores).
 
 ## Security

@@ -55,3 +55,11 @@ Prepare backend as microservices (auth, game, chat, etc.).
 
 PACKEGE.JSON
 //Required for installing dependencies (npm install) and running your backend (npm run start).
+
+
+
+
+
+* Use knex instead of rawSQL to create tables and to query the Database
+* Split the code into routes, controllers, and model functions (where model functions are the ones that query the database), amd 
+    the schema folder [where schema is validation schemas, the ones you attach before the routes in Fastify], migration folder
