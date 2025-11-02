@@ -27,7 +27,29 @@ try {
       wins INTEGER DEFAULT 0,
       losses INTEGER DEFAULT 0,
       rating INTEGER DEFAULT 1000
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_channels (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      type TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      user1_id INTEGER,
+      user2_id INTEGER,
+      FOREIGN KEY (user1_id) REFERENCES users(id),
+      FOREIGN KEY (user2_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      channel_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      message TEXT NOT NULL,
+      message_type TEXT DEFAULT 'text',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (channel_id) REFERENCES chat_channels(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
   `);
 
   console.log('✅ Database tables initialized');
@@ -260,32 +282,93 @@ fastify.register(async function (fastify) {
     });
   });
 
-  // Mock chat endpoints
+  // Chat endpoints
   fastify.get('/chat/channels', { preHandler: requireAuth }, async (request, reply) => {
-    reply.send({
-      channels: [
-        {
-          id: 1,
-          name: 'Global',
-          type: 'global',
-          last_message: 'Welcome to ft_transcendence!'
-        }
-      ]
-    });
+    try {
+      const userId = request.session.userId;
+
+      // Get all channels user is part of
+      const channels = db.prepare(`
+        SELECT
+          c.*,
+          (SELECT message FROM chat_messages WHERE channel_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+          CASE
+            WHEN c.type = 'dm' AND c.user1_id != ? THEN u1.display_name
+            WHEN c.type = 'dm' AND c.user2_id != ? THEN u2.display_name
+            ELSE c.name
+          END as display_name,
+          CASE
+            WHEN c.type = 'dm' AND c.user1_id != ? THEN c.user1_id
+            WHEN c.type = 'dm' AND c.user2_id != ? THEN c.user2_id
+            ELSE NULL
+          END as other_user_id
+        FROM chat_channels c
+        LEFT JOIN users u1 ON c.user1_id = u1.id
+        LEFT JOIN users u2 ON c.user2_id = u2.id
+        WHERE c.type = 'global' OR c.user1_id = ? OR c.user2_id = ?
+        ORDER BY c.id
+      `).all(userId, userId, userId, userId, userId, userId);
+
+      // Ensure Global channel exists
+      if (!channels.find(c => c.type === 'global')) {
+        db.prepare('INSERT OR IGNORE INTO chat_channels (name, type, created_at) VALUES (?, ?, ?)').run('Global', 'global', new Date().toISOString());
+        const globalChannel = db.prepare('SELECT * FROM chat_channels WHERE type = ?').get('global');
+        channels.unshift({ ...globalChannel, last_message: null, display_name: 'Global', other_user_id: null });
+      }
+
+      reply.send({ channels });
+    } catch (error) {
+      console.error('Get channels error:', error);
+      reply.status(500).send({ error: 'Failed to get channels' });
+    }
   });
 
   fastify.get('/chat/channels/:channelId/messages', { preHandler: requireAuth }, async (request, reply) => {
-    reply.send({
-      messages: [
-        {
-          id: 1,
-          user_id: 1,
-          username: 'System',
-          content: 'Welcome to the chat!',
-          created_at: new Date().toISOString()
-        }
-      ]
-    });
+    try {
+      const channelId = parseInt(request.params.channelId);
+      const messages = db.prepare(`
+        SELECT m.*, u.display_name, u.avatar_url
+        FROM chat_messages m
+        JOIN users u ON m.user_id = u.id
+        WHERE m.channel_id = ?
+        ORDER BY m.created_at ASC
+        LIMIT 100
+      `).all(channelId);
+
+      reply.send({ messages });
+    } catch (error) {
+      console.error('Get messages error:', error);
+      reply.status(500).send({ error: 'Failed to get messages' });
+    }
+  });
+
+  fastify.post('/chat/channels/:channelId/messages', { preHandler: requireAuth }, async (request, reply) => {
+    try {
+      const channelId = parseInt(request.params.channelId);
+      const { message } = request.body || {};
+      const userId = request.session.userId;
+
+      if (!message || !message.trim()) {
+        return reply.status(400).send({ error: 'Message is required' });
+      }
+
+      const result = db.prepare(`
+        INSERT INTO chat_messages (channel_id, user_id, message, created_at)
+        VALUES (?, ?, ?, ?)
+      `).run(channelId, userId, message.trim(), new Date().toISOString());
+
+      const newMessage = db.prepare(`
+        SELECT m.*, u.display_name, u.avatar_url
+        FROM chat_messages m
+        JOIN users u ON m.user_id = u.id
+        WHERE m.id = ?
+      `).get(result.lastInsertRowid);
+
+      reply.send({ message: newMessage });
+    } catch (error) {
+      console.error('Send message error:', error);
+      reply.status(500).send({ error: 'Failed to send message' });
+    }
   });
 
   // Mock WebSocket endpoint for matches
