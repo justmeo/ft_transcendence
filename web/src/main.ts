@@ -1,6 +1,7 @@
 import { Router } from './router';
 import { HomePage } from './pages/home';
 import { LoginPage } from './pages/login';
+import { SignupPage } from './pages/signup';
 import { PlayPage } from './pages/play';
 import { AIPage } from './pages/ai-demo';
 import { TournamentPage } from './pages/tournament';
@@ -12,6 +13,7 @@ import { SettingsPage } from './pages/settings';
 const routes = {
   '/': HomePage,
   '/login': LoginPage,
+  '/signup': SignupPage,
   '/play': PlayPage,
   '/ai': AIPage,
   '/tournament': TournamentPage,
