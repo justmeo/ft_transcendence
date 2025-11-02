@@ -10,139 +10,276 @@ export class AIPage implements Page {
     return `
       <div class="page">
         <h2>🤖 AI vs Human Pong</h2>
-        <p>Test your skills against our AI opponent! The AI analyzes ball trajectory, predicts bounces, and responds like a human player.</p>
-
-        <div class="game-container">
-          <div class="game-controls">
-            <div class="control-group">
-              <h3>Game Settings</h3>
-              
-              <div style="margin-bottom: 1rem;">
-                <label for="ball-speed">Ball Speed:</label>
-                <input type="range" id="ball-speed" min="150" max="400" value="250" style="margin: 0 0.5rem;">
-                <span id="ball-speed-value">250</span>
+        <div class="ai-layout">
+          <aside class="ai-sidebar">
+            <section class="panel panel-primary">
+              <header class="panel-header">
+                <h3>Match Setup</h3>
+                <p class="panel-subtitle">Tune the arena and AI personality before you play.</p>
+              </header>
+              <div class="field range-field">
+                <label for="ball-speed">Ball Speed</label>
+                <div class="range-row">
+                  <input type="range" id="ball-speed" min="150" max="400" value="250">
+                  <div class="value-tag" id="ball-speed-value">250</div>
+                </div>
               </div>
 
-              <div style="margin-bottom: 1rem;">
-                <label for="paddle-size">Paddle Size:</label>
-                <input type="range" id="paddle-size" min="60" max="120" value="80" style="margin: 0 0.5rem;">
-                <span id="paddle-size-value">80</span>
+              <div class="field range-field">
+                <label for="paddle-size">Paddle Size</label>
+                <div class="range-row">
+                  <input type="range" id="paddle-size" min="60" max="120" value="80">
+                  <div class="value-tag" id="paddle-size-value">80</div>
+                </div>
               </div>
 
-              <div style="margin-bottom: 1rem;">
-                <label for="ai-difficulty">AI Difficulty:</label>
-                <select id="ai-difficulty" style="margin-left: 0.5rem; padding: 0.25rem;">
-                  <option value="0.3">🟢 Easy - Slow reactions, poor prediction</option>
-                  <option value="0.6" selected>🟡 Medium - Balanced gameplay</option>
-                  <option value="0.9">🔴 Hard - Fast reactions, good prediction</option>
+              <div class="field">
+                <label for="ai-difficulty">AI Difficulty</label>
+                <select id="ai-difficulty">
+                  <option value="0.3">🟢 Easy · Laid-back reflexes</option>
+                  <option value="0.6" selected>🟡 Medium · Balanced response</option>
+                  <option value="0.9">🔴 Hard · Tournament ready</option>
                 </select>
               </div>
 
-              <div style="margin-bottom: 1rem;">
-                <label for="ai-side">You play as:</label>
-                <select id="ai-side" style="margin-left: 0.5rem; padding: 0.25rem;">
-                  <option value="left" selected>Left Side (W/S keys)</option>
-                  <option value="right">Right Side (↑/↓ keys)</option>
+              <div class="field">
+                <label for="ai-side">Your Side</label>
+                <select id="ai-side">
+                  <option value="left" selected>Left (W / S)</option>
+                  <option value="right">Right (↑ / ↓)</option>
                 </select>
               </div>
 
-              <div style="margin-bottom: 1rem;">
-                <button id="start-game" class="btn">Start New Game</button>
-                <button id="reset-game" class="btn btn-secondary" style="margin-left: 0.5rem;">Reset</button>
+              <div class="button-stack">
+                <button id="start-game" class="btn">Play Match</button>
+                <button id="reset-game" class="btn btn-secondary">Reset</button>
               </div>
-            </div>
+            </section>
 
-            <div class="control-group">
-              <h3>Controls</h3>
-              <div style="font-size: 0.9rem;">
-                <div><strong>Left Side:</strong> W (up) / S (down)</div>
-                <div><strong>Right Side:</strong> ↑ (up) / ↓ (down)</div>
-                <div style="margin-top: 0.5rem; opacity: 0.8;">First to 5 points wins!</div>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <h3>AI Features</h3>
-              <ul style="font-size: 0.9rem; margin: 0; padding-left: 1.2rem;">
-                <li>Samples game state at 1Hz (like human vision)</li>
-                <li>Predicts ball trajectory with wall bounces</li>
-                <li>Respects paddle speed limits</li>
-                <li>Makes human-like mistakes</li>
-                <li>Adjustable difficulty affects reaction time</li>
+            <section class="panel">
+              <header class="panel-header">
+                <h3>Quick Reference</h3>
+              </header>
+              <ul class="bullet-list">
+                <li><strong>Left player:</strong> W / S</li>
+                <li><strong>Right player:</strong> ↑ / ↓ or I / K</li>
+                <li><strong>Goal:</strong> First to 5 points wins</li>
+                <li><strong>Pause:</strong> Space · <strong>Restart:</strong> R</li>
               </ul>
-            </div>
-          </div>
+            </section>
 
-          <div class="game-area">
-            <div id="game-status" style="text-align: center; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 500;">
-              Configure settings and click "Start New Game"
+            <section class="panel panel-muted">
+              <header class="panel-header">
+                <h3>How The AI Thinks</h3>
+              </header>
+              <ul class="feature-list">
+                <li>Predicts ball impact and angles the paddle accordingly.</li>
+                <li>Adapts reaction speed and precision to selected difficulty.</li>
+                <li>Imitates human mistakes with controlled randomness.</li>
+                <li>Respects paddle physics—no unfair teleporting moves.</li>
+              </ul>
+            </section>
+          </aside>
+
+          <section class="ai-stage">
+            <div id="game-status" class="status-banner">
+              Pick your settings and press <strong>Play Match</strong>.
             </div>
-            
-            <canvas id="pong-canvas" style="display: block; margin: 0 auto;"></canvas>
-            
-            <div id="game-results" style="text-align: center; margin-top: 1rem; display: none;">
-              <div id="winner-text" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;"></div>
+
+            <div class="canvas-wrapper">
+              <canvas id="pong-canvas"></canvas>
+            </div>
+
+            <div id="game-results" class="results-card" aria-live="polite">
+              <div id="winner-text" class="results-title"></div>
               <button id="play-again" class="btn">Play Again</button>
             </div>
-          </div>
+          </section>
         </div>
 
         <style>
-          .game-container {
+          .ai-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2.4rem;
+            margin-top: 2.5rem;
+          }
+
+          .ai-sidebar {
             display: flex;
-            gap: 2rem;
-            margin-top: 2rem;
+            flex-direction: column;
+            gap: 1.25rem;
           }
-          
-          .game-controls {
-            flex: 0 0 300px;
-          }
-          
-          .game-area {
-            flex: 1;
-            min-width: 0;
-          }
-          
-          .control-group {
-            background: rgba(255, 255, 255, 0.05);
+
+          .panel {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 16px;
             padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
           }
-          
-          .control-group h3 {
-            margin: 0 0 1rem 0;
-            color: var(--primary);
+
+          .panel-primary {
+            border-color: rgba(99, 102, 241, 0.55);
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.35);
           }
-          
-          .control-group label {
-            display: inline-block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+
+          .panel-muted {
+            background: rgba(15, 23, 42, 0.45);
           }
-          
-          .control-group input[type="range"] {
-            width: 100px;
+
+          .panel-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--light);
           }
-          
-          .control-group select {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-light);
-            border: 1px solid var(--border);
-            border-radius: 4px;
+
+          .panel-subtitle {
+            margin: 0.35rem 0 0 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
           }
-          
+
+          .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+
+          .field label {
+            font-weight: 600;
+            color: var(--light);
+            font-size: 0.95rem;
+          }
+
+          .field select,
+          .field input[type="range"] {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            padding: 0.6rem 0.8rem;
+            color: var(--light);
+            font-size: 0.95rem;
+          }
+
+          .field input[type="range"] {
+            accent-color: var(--primary);
+            padding: 0;
+          }
+
+          .range-field select,
+          .range-field input[type="range"] {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            padding: 0.6rem 0.8rem;
+            color: var(--light);
+            font-size: 0.95rem;
+          }
+
+          .range-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+          }
+
+          .range-row input[type="range"] {
+            flex: 1;
+          }
+
+          .value-tag {
+            align-self: flex-end;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+          }
+
+          .button-stack {
+            display: flex;
+            gap: 0.75rem;
+          }
+
+          .bullet-list,
+          .feature-list {
+            margin: 0;
+            padding-left: 1.1rem;
+            display: grid;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--light);
+          }
+
+          .feature-list {
+            list-style: disc;
+          }
+
+          .ai-stage {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+          }
+
+          .status-banner {
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.9rem 1.25rem;
+            border-radius: 12px;
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+          }
+
+          .canvas-wrapper {
+            background: radial-gradient(circle at top, rgba(30, 64, 175, 0.25), rgba(2, 6, 23, 0.95));
+            border-radius: 18px;
+            padding: 1.25rem;
+            box-shadow: inset 0 0 35px rgba(15, 23, 42, 0.55);
+          }
+
           #pong-canvas {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 12px;
           }
-          
-          @media (max-width: 1024px) {
-            .game-container {
-              flex-direction: column;
+
+          .results-card {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+          }
+
+          .results-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+          }
+
+          @media (max-width: 1120px) {
+            .ai-layout {
+              grid-template-columns: 1fr;
             }
-            
-            .game-controls {
-              flex: none;
+
+            .ai-sidebar {
+              flex-direction: row;
+              flex-wrap: wrap;
+            }
+
+            .panel {
+              flex: 1 1 300px;
+            }
+          }
+
+          @media (max-width: 720px) {
+            .button-stack {
+              flex-direction: column;
             }
           }
         </style>

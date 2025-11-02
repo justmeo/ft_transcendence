@@ -1,41 +1,30 @@
 import { Page } from '../router';
 import { PongEngine } from '../game/pong';
 import { TournamentManager } from '../game/tournament-manager';
-import { WebSocketGameClient } from '../services/websocket-game-client';
-import { AuthService } from '../services/auth-service';
 
 export class PlayPage implements Page {
   private pongGame: PongEngine | null = null;
   private tournamentManager: TournamentManager | null = null;
-  private wsGameClient: WebSocketGameClient | null = null;
-  private authService: AuthService;
   private currentMatchId: string | null = null;
   private player1Alias: string | null = null;
   private player2Alias: string | null = null;
-  private isOnlineMatch = false;
 
   render(): string {
     this.tournamentManager = new TournamentManager();
-    this.authService = new AuthService();
 
     const urlParams = new URLSearchParams(window.location.search);
     this.currentMatchId = urlParams.get('match');
     this.player1Alias = urlParams.get('p1');
     this.player2Alias = urlParams.get('p2');
-    this.isOnlineMatch = urlParams.get('online') === 'true';
 
     if (this.pongGame) {
       this.pongGame.destroy();
       this.pongGame = null;
     }
-    if (this.wsGameClient) {
-      this.wsGameClient.disconnect();
-      this.wsGameClient = null;
-    }
 
     setTimeout(() => this.initializeGame(), 0);
 
-    const matchBanner = this.currentMatchId
+    const tournamentBanner = this.currentMatchId
       ? `
         <div class="match-banner">
           <h3>🏆 Tournament Match</h3>
@@ -49,71 +38,84 @@ export class PlayPage implements Page {
       `
       : '';
 
+    const maxScore = new PongEngine().getConfig().maxScore;
+
     return `
       <div class="page">
-        ${matchBanner}
-
+        ${tournamentBanner}
         <h2>🎮 Head-to-Head Pong</h2>
-        <p>Responsive controls, richer physics, and tournament-ready presentation for local play.</p>
 
-        <div class="game-layout">
-          <div class="game-controls">
-            <div class="control-group">
-              <h3>Game Settings</h3>
-              <label>
-                Ball Speed
-                <span id="ball-speed-value" class="setting-value">260</span>
-              </label>
-              <input type="range" id="ball-speed" min="200" max="420" value="260">
+        <div class="duel-layout">
+          <aside class="duel-sidebar">
+            <section class="panel panel-primary">
+              <header class="panel-header">
+                <h3>Match Setup</h3>
+                <p class="panel-subtitle">Dial in the match before you take the court.</p>
+              </header>
 
-              <label>
-                Paddle Size
-                <span id="paddle-size-value" class="setting-value">88</span>
-              </label>
-              <input type="range" id="paddle-size" min="60" max="130" value="88">
+              <div class="field range-field">
+                <label for="ball-speed">Ball Speed</label>
+                <div class="range-row">
+                  <input type="range" id="ball-speed" min="200" max="420" value="260">
+                  <span class="value-tag" id="ball-speed-value">260</span>
+                </div>
+              </div>
 
-              <p class="setting-hint">Changes apply immediately, even mid-rally.</p>
-            </div>
+              <div class="field range-field">
+                <label for="paddle-size">Paddle Size</label>
+                <div class="range-row">
+                  <input type="range" id="paddle-size" min="60" max="130" value="88">
+                  <span class="value-tag" id="paddle-size-value">88</span>
+                </div>
+              </div>
 
-            <div class="control-group">
-              <h3>Controls</h3>
-              <ul>
+              <div class="button-stack">
+                <button id="start-btn" class="btn">Start Match</button>
+                <button id="pause-btn" class="btn btn-secondary" disabled>Pause</button>
+                <button id="reset-btn" class="btn btn-secondary" disabled>Reset Score</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <header class="panel-header">
+                <h3>Quick Controls</h3>
+              </header>
+              <ul class="bullet-list">
                 <li><strong>Left player:</strong> W / S</li>
                 <li><strong>Right player:</strong> ↑ / ↓ (or I / K)</li>
                 <li><strong>Pause:</strong> Spacebar</li>
-                <li><strong>Restart:</strong> R key</li>
+                <li><strong>Reset rally:</strong> R key</li>
               </ul>
-            </div>
+            </section>
 
-            <div class="control-group">
-              <h3>Match Tips</h3>
-              <ul>
-                <li>Spin the ball by moving while striking.</li>
-                <li>Serve alternates after every point.</li>
-                <li>First to <strong>5</strong> wins the match.</li>
+            <section class="panel panel-muted">
+              <header class="panel-header">
+                <h3>Match Tips</h3>
+              </header>
+              <ul class="feature-list">
+                <li>Ball gains speed on every paddle collision.</li>
+                <li>Off-center hits add spin—aim your returns.</li>
+                <li>Adjust paddle size to balance skill levels.</li>
+                <li>First to ${maxScore} points wins the match.</li>
               </ul>
-            </div>
-          </div>
+            </section>
+          </aside>
 
-          <div class="game-area">
-            <div id="game-status" class="game-status">
-              Configure your settings and press <strong>Start Match</strong>.
+          <section class="duel-stage">
+            <div id="game-status" class="status-banner">
+              Configure your match and press <strong>Start Match</strong>.
             </div>
 
-            <canvas id="local-pong-canvas"></canvas>
+            <div class="canvas-wrapper">
+              <canvas id="local-pong-canvas"></canvas>
+            </div>
 
             <div class="scoreboard" id="local-scoreboard">
               <span id="score-left">0</span>
               <span class="divider">—</span>
               <span id="score-right">0</span>
             </div>
-
-            <div class="button-row">
-              <button id="start-btn" class="btn">Start Match</button>
-              <button id="pause-btn" class="btn btn-secondary" disabled>Pause</button>
-              <button id="reset-btn" class="btn btn-secondary" disabled>Reset Score</button>
-            </div>
-          </div>
+          </section>
         </div>
 
         <style>
@@ -125,89 +127,163 @@ export class PlayPage implements Page {
             margin-bottom: 1.5rem;
             background: rgba(251, 191, 36, 0.08);
           }
+
           .match-banner h3 {
             margin: 0 0 0.5rem 0;
           }
+
           .match-banner p {
             margin: 0 0 0.25rem 0;
             font-size: 1.15rem;
           }
+
           .match-meta {
             font-size: 0.85rem;
             opacity: 0.7;
           }
-          .game-layout {
-            display: flex;
-            gap: 2.5rem;
+
+          .duel-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2.4rem;
             margin-top: 2.5rem;
-            flex-wrap: wrap;
           }
-          .game-controls {
-            flex: 0 0 320px;
+
+          .duel-sidebar {
             display: flex;
             flex-direction: column;
             gap: 1.25rem;
           }
-          .control-group {
-            background: rgba(15, 23, 42, 0.55);
-            border: 1px solid rgba(99, 102, 241, 0.35);
-            border-radius: 12px;
+
+          .panel {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 16px;
             padding: 1.5rem;
-          }
-          .control-group h3 {
-            margin-top: 0;
-            margin-bottom: 1rem;
-            color: var(--accent);
-          }
-          .control-group label {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            margin-bottom: 0.35rem;
+            flex-direction: column;
+            gap: 1rem;
           }
-          .setting-value {
-            font-size: 0.9rem;
-            color: var(--text-muted);
+
+          .panel-primary {
+            border-color: rgba(99, 102, 241, 0.55);
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.35);
           }
-          .control-group input[type="range"] {
-            width: 100%;
-            margin-bottom: 1rem;
+
+          .panel-muted {
+            background: rgba(15, 23, 42, 0.45);
           }
-          .control-group ul {
-            list-style: none;
-            padding: 0;
+
+          .panel-header h3 {
             margin: 0;
-            display: grid;
-            gap: 0.5rem;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
+            color: var(--light);
           }
-          .setting-hint {
+
+          .panel-subtitle {
+            margin: 0.35rem 0 0 0;
             font-size: 0.85rem;
             color: var(--text-muted);
-            margin-top: 0.5rem;
           }
-          .game-area {
+
+          .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+
+          .field label {
+            font-weight: 600;
+            color: var(--light);
+            font-size: 0.95rem;
+          }
+
+          .field input[type="range"] {
+            accent-color: var(--primary);
+          }
+
+          .field input[type="range"],
+          .field select {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            padding: 0.6rem 0.8rem;
+            color: var(--light);
+            font-size: 0.95rem;
+          }
+
+          .range-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+          }
+
+          .range-row input[type="range"] {
             flex: 1;
-            min-width: 0;
+            padding: 0;
+          }
+
+          .value-tag {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+          }
+
+          .button-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+          }
+
+          .button-stack .btn {
+            flex: 1 1 120px;
+          }
+
+          .bullet-list,
+          .feature-list {
+            margin: 0;
+            padding-left: 1.1rem;
+            display: grid;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--light);
+          }
+
+          .feature-list {
+            list-style: disc;
+          }
+
+          .duel-stage {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
           }
-          .game-status {
-            background: rgba(79, 70, 229, 0.12);
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            border-radius: 10px;
-            padding: 1rem 1.25rem;
-            font-weight: 600;
+
+          .status-banner {
             text-align: center;
-            color: var(--light);
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.9rem 1.25rem;
+            border-radius: 12px;
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
           }
+
+          .canvas-wrapper {
+            background: radial-gradient(circle at top, rgba(30, 64, 175, 0.25), rgba(2, 6, 23, 0.95));
+            border-radius: 18px;
+            padding: 1.25rem;
+            box-shadow: inset 0 0 35px rgba(15, 23, 42, 0.55);
+          }
+
           #local-pong-canvas {
+            display: block;
             width: 100%;
-            max-width: 860px;
-            height: auto;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 12px;
           }
+
           .scoreboard {
             display: flex;
             justify-content: center;
@@ -217,25 +293,29 @@ export class PlayPage implements Page {
             font-weight: 700;
             color: var(--light);
           }
+
           .scoreboard .divider {
             color: rgba(99, 102, 241, 0.7);
           }
-          .button-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: center;
-          }
-          .button-row .btn {
-            min-width: 150px;
-          }
-          @media (max-width: 1024px) {
-            .game-layout {
-              flex-direction: column;
+
+          @media (max-width: 1120px) {
+            .duel-layout {
+              grid-template-columns: 1fr;
             }
-            .game-controls {
-              flex: none;
-              width: 100%;
+
+            .duel-sidebar {
+              flex-direction: row;
+              flex-wrap: wrap;
+            }
+
+            .panel {
+              flex: 1 1 300px;
+            }
+          }
+
+          @media (max-width: 720px) {
+            .button-stack {
+              flex-direction: column;
             }
           }
         </style>
@@ -305,7 +385,7 @@ export class PlayPage implements Page {
     });
 
     updateScoreboard({ left: 0, right: 0 });
-    updateStatus('Configure your settings and press <strong>Start Match</strong>.');
+    updateStatus('Configure your match and press <strong>Start Match</strong>.');
 
     startBtn.addEventListener('click', () => {
       if (!this.pongGame) return;
@@ -342,13 +422,13 @@ export class PlayPage implements Page {
 
     ballSpeedSlider.addEventListener('input', () => {
       const speed = parseInt(ballSpeedSlider.value, 10);
-      ballSpeedValue!.textContent = speed.toString();
+      if (ballSpeedValue) ballSpeedValue.textContent = speed.toString();
       this.pongGame?.updateConfig({ ballSpeed: speed });
     });
 
     paddleSizeSlider.addEventListener('input', () => {
       const height = parseInt(paddleSizeSlider.value, 10);
-      paddleSizeValue!.textContent = height.toString();
+      if (paddleSizeValue) paddleSizeValue.textContent = height.toString();
       this.pongGame?.updateConfig({ paddleHeight: height });
     });
   }
