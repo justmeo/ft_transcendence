@@ -13,11 +13,11 @@ services:
       - "8080:8080"
     expose:
       - "8080"
-    # volumes:
-    #   # Mount source code for live reload no need to rebuild
-    #   - ./api/src:/app/src
-    #   - ./api/package.json:/app/package.json
-    #   - ./db:/app/db
+    volumes:
+      # Mount source code for live reload no need to rebuild
+      - ./api/src:/app/src
+      - ./api/package.json:/app/package.json
+      - ./db:/app/db
     networks:
       - ft_network
     restart: unless-stopped

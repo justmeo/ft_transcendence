@@ -2,10 +2,10 @@
   "name": "ft-transcendence-api",
   "version": "1.0.0",
   "description": "Fastify API server for ft_transcendence",
-  "main": "src/index.js",
+  "main": "src/index-minimal.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "start": "node src/index-minimal.js",
+    "dev": "nodemon src/index-minimal.js"
   },
   "dependencies": {
     "fastify": "^4.24.3",
