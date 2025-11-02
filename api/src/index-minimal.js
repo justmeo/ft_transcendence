@@ -186,6 +186,65 @@ fastify.register(async function (fastify) {
     }
   });
 
+  // Profile stats endpoint
+  fastify.get('/profile/stats', { preHandler: requireAuth }, async (request, reply) => {
+    try {
+      const user = db.prepare('SELECT * FROM users WHERE id = ?').get(request.session.userId);
+
+      if (!user) {
+        return reply.status(404).send({ error: 'User not found' });
+      }
+
+      // Calculate win rate
+      const winRate = user.total_games > 0
+        ? ((user.wins / user.total_games) * 100).toFixed(1) + '%'
+        : '0%';
+
+      // Return stats
+      reply.send({
+        totalGames: user.total_games,
+        wins: user.wins,
+        losses: user.losses,
+        winRate: winRate,
+        rank: user.rating >= 1200 ? 'Gold' : user.rating >= 1000 ? 'Silver' : 'Bronze',
+        rating: user.rating,
+        longestWinStreak: 0, // TODO: Track this
+        favoriteOpponent: null // TODO: Track this
+      });
+    } catch (error) {
+      console.error('Get stats error:', error);
+      reply.status(500).send({ error: 'Failed to get stats' });
+    }
+  });
+
+  // Update profile endpoint
+  fastify.put('/profile', { preHandler: requireAuth }, async (request, reply) => {
+    try {
+      const { displayName, avatarUrl } = request.body || {};
+
+      if (displayName) {
+        db.prepare('UPDATE users SET display_name = ? WHERE id = ?')
+          .run(displayName, request.session.userId);
+      }
+
+      if (avatarUrl !== undefined) {
+        db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?')
+          .run(avatarUrl, request.session.userId);
+      }
+
+      const user = db.prepare('SELECT * FROM users WHERE id = ?').get(request.session.userId);
+      const { password: _, ...userResponse } = user;
+
+      reply.send({
+        message: 'Profile updated successfully',
+        user: userResponse
+      });
+    } catch (error) {
+      console.error('Update profile error:', error);
+      reply.status(500).send({ error: 'Failed to update profile' });
+    }
+  });
+
   // Mock tournament endpoints
   fastify.get('/tournaments', async (request, reply) => {
     reply.send({
