@@ -9,7 +9,7 @@ export class LoginPage implements Page {
   }
 
   render(): string {
-    setTimeout(() => this.initializeEventHandlers(), 0);
+    setTimeout(() => this.checkAndRedirect(), 0);
 
     return `
       <div class="main-content">
@@ -139,6 +139,17 @@ export class LoginPage implements Page {
         </style>
       </div>
     `;
+  }
+
+  private async checkAndRedirect(): Promise<void> {
+    // Check if already logged in
+    const isAuthenticated = await this.authService.checkAuth();
+    if (isAuthenticated) {
+      window.location.href = '/';
+      return;
+    }
+
+    this.initializeEventHandlers();
   }
 
   private initializeEventHandlers(): void {
