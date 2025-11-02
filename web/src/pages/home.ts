@@ -6,28 +6,25 @@ export class HomePage implements Page {
       <div class="page">
         <h2>Welcome to ft_transcendence</h2>
         <p>A modern gaming platform built with TypeScript and Docker.</p>
-        
+
         <div class="cards">
           <div class="card">
             <h3>🎮 Play Games</h3>
             <p>Jump into quick matches and challenge other players online.</p>
+            <a href="/play" data-route class="btn" style="margin-top: 1rem;">Start Playing</a>
           </div>
-          
+
           <div class="card">
             <h3>🏆 Tournaments</h3>
             <p>Compete in organized tournaments and climb the leaderboards.</p>
+            <a href="/tournament" data-route class="btn btn-accent" style="margin-top: 1rem;">View Tournaments</a>
           </div>
-          
+
           <div class="card">
-            <h3>⚙️ Customize</h3>
-            <p>Personalize your gaming experience with custom settings.</p>
+            <h3>💬 Chat</h3>
+            <p>Connect with other players and make new friends.</p>
+            <a href="/chat" data-route class="btn btn-secondary" style="margin-top: 1rem;">Join Chat</a>
           </div>
-        </div>
-        
-        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
-          <h3>🚀 Development Status</h3>
-          <p>This is a TypeScript SPA with client-side routing using the History API. 
-             Navigation supports back/forward buttons and maintains proper browser history.</p>
         </div>
       </div>
     `;

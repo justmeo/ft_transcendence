@@ -43,6 +43,7 @@ services:
       - ft_network
     restart: unless-stopped
 
+
 networks:
   ft_network:
     driver: bridge

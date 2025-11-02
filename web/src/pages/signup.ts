@@ -13,127 +13,177 @@ export class SignupPage implements Page {
 
     return `
       <div class="page">
-        <div style="max-width: 400px; margin: 2rem auto;">
-          <div class="card">
-            <h2 style="text-align: center; margin-bottom: 2rem;">🚀 Join ft_transcendence</h2>
-            
-            <form id="signup-form">
-              <div style="margin-bottom: 1.5rem;">
-                <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email:</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  name="email"
-                  required
-                  style="width: 100%; padding: 0.75rem;"
-                  placeholder="Enter your email"
-                >
-                <div id="email-error" class="error-message"></div>
-              </div>
+        <div class="signup-container">
+          <h2 class="signup-title">Join ft_transcendence</h2>
 
-              <div style="margin-bottom: 1.5rem;">
-                <label for="displayName" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Display Name:</label>
-                <input 
-                  type="text" 
-                  id="displayName" 
-                  name="displayName"
-                  required
-                  style="width: 100%; padding: 0.75rem;"
-                  placeholder="Enter your display name"
-                  maxlength="50"
-                >
-                <div id="displayName-error" class="error-message"></div>
-                <small style="opacity: 0.7;">3-50 characters, letters, numbers, and underscores only</small>
-              </div>
-
-              <div style="margin-bottom: 1.5rem;">
-                <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password:</label>
-                <input 
-                  type="password" 
-                  id="password" 
-                  name="password"
-                  required
-                  style="width: 100%; padding: 0.75rem;"
-                  placeholder="Enter your password"
-                >
-                <div id="password-error" class="error-message"></div>
-                <small style="opacity: 0.7;">At least 6 characters with uppercase, lowercase, and number</small>
-              </div>
-
-              <div style="margin-bottom: 1.5rem;">
-                <label for="confirmPassword" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Confirm Password:</label>
-                <input 
-                  type="password" 
-                  id="confirmPassword" 
-                  name="confirmPassword"
-                  required
-                  style="width: 100%; padding: 0.75rem;"
-                  placeholder="Confirm your password"
-                >
-                <div id="confirmPassword-error" class="error-message"></div>
-              </div>
-
-              <div style="margin-bottom: 1.5rem;">
-                <label for="avatarUrl" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Avatar URL (optional):</label>
-                <input 
-                  type="url" 
-                  id="avatarUrl" 
-                  name="avatarUrl"
-                  style="width: 100%; padding: 0.75rem;"
-                  placeholder="https://example.com/avatar.jpg"
-                >
-                <div id="avatarUrl-error" class="error-message"></div>
-              </div>
-
-              <div id="form-error" class="error-message" style="margin-bottom: 1rem;"></div>
-
-              <button 
-                type="submit" 
-                id="signup-btn"
-                class="btn" 
-                style="width: 100%; margin-bottom: 1rem;">
-                Create Account
-              </button>
-            </form>
-
-            <div style="text-align: center; margin-top: 1.5rem;">
-              <p style="margin-bottom: 0.5rem;">Already have an account?</p>
-              <a href="/login" class="btn btn-secondary">Login</a>
+          <form id="signup-form" class="signup-form">
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                placeholder="Enter your email"
+              >
+              <div id="email-error" class="error-message"></div>
             </div>
+
+            <div class="form-group">
+              <label for="displayName">Display Name</label>
+              <input
+                type="text"
+                id="displayName"
+                name="displayName"
+                required
+                placeholder="Enter your display name"
+                maxlength="50"
+              >
+              <div id="displayName-error" class="error-message"></div>
+              <small class="hint">3-50 characters, letters, numbers, and underscores only</small>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                placeholder="Enter your password"
+              >
+              <div id="password-error" class="error-message"></div>
+              <small class="hint">At least 6 characters with uppercase, lowercase, and number</small>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                required
+                placeholder="Confirm your password"
+              >
+              <div id="confirmPassword-error" class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="avatarUrl">Avatar URL (optional)</label>
+              <input
+                type="url"
+                id="avatarUrl"
+                name="avatarUrl"
+                placeholder="https://example.com/avatar.jpg"
+              >
+              <div id="avatarUrl-error" class="error-message"></div>
+            </div>
+
+            <div id="form-error" class="form-error"></div>
+
+            <button
+              type="submit"
+              id="signup-btn"
+              class="btn signup-btn">
+              Create Account
+            </button>
+          </form>
+
+          <div class="login-link">
+            <p>Already have an account?</p>
+            <a href="/login" data-route class="btn btn-secondary">Login</a>
           </div>
         </div>
 
         <style>
+          .signup-container {
+            max-width: 500px;
+            margin: 0 auto;
+          }
+
+          .signup-title {
+            text-align: center;
+            margin-bottom: 2rem;
+          }
+
+          .signup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+          }
+
+          .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+
           .error-message {
-            color: var(--error);
+            color: var(--primary);
             font-size: 0.875rem;
             margin-top: 0.25rem;
-            min-height: 1.25rem;
+            font-weight: 600;
           }
-          
+
           .error-message:empty {
             display: none;
           }
-          
-          input.error {
-            border-color: var(--error) !important;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+
+          .form-error {
+            background: var(--primary);
+            color: var(--white);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            font-weight: 600;
+            text-align: center;
           }
-          
+
+          .form-error:empty {
+            display: none;
+          }
+
+          .hint {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+          }
+
+          .signup-btn {
+            width: 100%;
+            justify-content: center;
+            margin-top: 0.5rem;
+          }
+
+          .login-link {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+          }
+
+          .login-link p {
+            color: var(--text-muted);
+            margin: 0;
+          }
+
+          input.error {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.2) !important;
+          }
+
           input.valid {
             border-color: var(--success) !important;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+            box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.2) !important;
           }
-          
+
           .loading {
             opacity: 0.7;
             pointer-events: none;
-          }
-
-          small {
-            display: block;
-            margin-top: 0.25rem;
-            font-size: 0.75rem;
           }
         </style>
       </div>

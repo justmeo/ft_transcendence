@@ -57,11 +57,11 @@ export class PlayPage implements Page {
         <p>${this.currentMatchId ? 'Tournament match in progress!' : 'Classic Pong with modern controls. Play against a friend!'}</p>
         
         <div style="margin: 2rem 0;">
-          <div id="game-container" style="text-align: center; margin-bottom: 1rem;">
+          <div id="game-container" style="text-align: center; margin-bottom: 1.5rem;">
             <!-- Pong canvas will be mounted here -->
           </div>
-          
-          <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+
+          <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
             <button id="start-btn" class="btn">Start Game</button>
             <button id="pause-btn" class="btn btn-secondary">Pause</button>
             <button id="reset-btn" class="btn btn-secondary">Reset</button>
@@ -104,9 +104,9 @@ export class PlayPage implements Page {
           </div>
         </div>
         
-        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
-          <h3>🏆 Current Match</h3>
-          <div id="game-status" style="text-align: center; font-size: 1.1rem; margin-top: 1rem;">
+        <div style="margin-top: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 2px solid var(--border);">
+          <h3 style="margin-bottom: 1rem; color: var(--accent); text-align: center;">🏆 Current Match</h3>
+          <div id="game-status" style="text-align: center; font-size: 1.1rem; color: var(--light); font-weight: 600;">
             Click "Start Game" to begin playing!
           </div>
         </div>

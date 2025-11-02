@@ -73,57 +73,68 @@ export class LoginPage implements Page {
           }
           
           .error-message {
-            color: var(--error);
+            color: var(--primary);
             font-size: 0.875rem;
             min-height: 1.25rem;
-            opacity: 0;
-            transform: translateY(-4px);
-            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+            font-weight: 600;
           }
-          
-          .error-message:not(:empty) {
-            opacity: 1;
-            transform: translateY(0);
+
+          .error-message:empty {
+            display: none;
           }
-          
+
           .form-error {
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 1rem;
+            background: var(--primary);
+            color: var(--white);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
           }
-          
+
+          .form-error:empty {
+            display: none;
+          }
+
           .login-btn {
             margin-top: 0.5rem;
             width: 100%;
             justify-content: center;
           }
-          
+
           .signup-link {
             margin-top: 2rem;
             padding-top: 2rem;
-            border-top: 1px solid var(--border);
+            border-top: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
           }
-          
+
           .signup-link p {
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
+            color: var(--text-muted);
+            margin: 0;
             font-size: 0.95rem;
           }
-          
+
           .login-form.loading {
             opacity: 0.7;
             pointer-events: none;
           }
-          
+
           .login-form.loading .login-btn {
             background: var(--neutral);
             cursor: not-allowed;
             box-shadow: none;
           }
-          
+
           input.error {
-            border-color: var(--error);
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.2);
           }
         </style>
       </div>
