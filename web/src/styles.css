@@ -169,6 +169,15 @@ body::before {
     box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
 }
 
+.nav-links a[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
+    border-color: var(--border);
+    box-shadow: none;
+    background: var(--bg-dark);
+}
+
 /* Main content */
 .main-content {
     flex: 1;

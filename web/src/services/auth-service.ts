@@ -28,6 +28,14 @@ export class AuthService {
   private baseUrl = '/api';
   private currentUser: User | null = null;
 
+  private emitAuthChange(isAuthenticated: boolean): void {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('auth:changed', { detail: { authenticated: isAuthenticated } })
+      );
+    }
+  }
+
   // Sign up new user
   async signup(email: string, password: string, displayName: string, avatarUrl?: string): Promise<User> {
     const response = await fetch(`${this.baseUrl}/auth/signup`, {
@@ -46,6 +54,7 @@ export class AuthService {
 
     const user = await response.json();
     this.currentUser = user;
+    this.emitAuthChange(true);
     return user;
   }
 
@@ -79,6 +88,7 @@ export class AuthService {
 
     if (response.ok) {
       this.currentUser = null;
+      this.emitAuthChange(false);
     }
   }
 
@@ -98,6 +108,7 @@ export class AuthService {
 
     const user = await response.json();
     this.currentUser = user;
+    this.emitAuthChange(true);
     return user;
   }
 
