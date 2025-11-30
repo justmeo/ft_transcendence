@@ -1,5 +1,6 @@
 export interface Page {
   render(): string;
+  mount?(container: HTMLElement): void;
   cleanup?(): void;
 }
 
@@ -69,6 +70,10 @@ export class Router {
     // Render new page
     this.currentPage = new PageClass();
     this.contentElement.innerHTML = this.currentPage.render();
+
+    if (this.currentPage.mount) {
+      this.currentPage.mount(this.contentElement);
+    }
   }
 
   private updateActiveNavLink(currentPath: string): void {

@@ -1,11 +1,41 @@
 import { Page } from '../router';
+import { BabylonHero } from '../utils/babylon-hero';
 
 export class HomePage implements Page {
+  private heroScene?: BabylonHero;
+
   render(): string {
     return `
       <div class="page">
-        <h2>Welcome to ft_transcendence</h2>
-        <p>A modern gaming platform built with TypeScript and Docker.</p>
+        <section class="hero-section">
+          <div class="hero-copy">
+            <p class="eyebrow">Next-gen Pong</p>
+            <h2>Welcome to ft_transcendence</h2>
+            <p class="lead">
+              Dive into our immersive arena where competitive multiplayer, live tournaments,
+              and AI-driven training collide. Everything runs in real time inside your browser.
+            </p>
+            <div class="hero-actions">
+              <a href="/play" data-route class="btn btn-accent">Launch Quick Match</a>
+              <a href="/ai" data-route class="btn ghost">Train with AI</a>
+            </div>
+            <div class="hero-stats">
+              <div>
+                <span class="stat-value">5ms</span>
+                <span class="stat-label">Input Latency</span>
+              </div>
+              <div>
+                <span class="stat-value">120Hz</span>
+                <span class="stat-label">Render Rate</span>
+              </div>
+              <div>
+                <span class="stat-value">24/7</span>
+                <span class="stat-label">Matchmaking</span>
+              </div>
+            </div>
+          </div>
+          <div class="hero-visual" id="babylon-hero"></div>
+        </section>
 
         <div class="cards">
           <div class="card">
@@ -25,8 +55,26 @@ export class HomePage implements Page {
             <p>Connect with other players and make new friends.</p>
             <a href="/chat" data-route class="btn btn-secondary" style="margin-top: 1rem;">Join Chat</a>
           </div>
+
+          <div class="card">
+            <h3>🧠 Babylon.js Arena</h3>
+            <p>Experience our 3D arena concept rendered live in your browser with Babylon.js.</p>
+            <a href="/play" data-route class="btn" style="margin-top: 1rem;">Explore Arena</a>
+          </div>
         </div>
       </div>
     `;
+  }
+
+  mount(container: HTMLElement): void {
+    const target = container.querySelector('#babylon-hero') as HTMLElement | null;
+    if (!target) return;
+
+    this.heroScene = new BabylonHero();
+    this.heroScene.init(target);
+  }
+
+  cleanup(): void {
+    this.heroScene?.dispose();
   }
 }
