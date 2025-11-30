@@ -13,26 +13,39 @@ import {
   Vector3
 } from 'babylonjs';
 
-type HeroSceneRefs = {
+type PaddleSide = 'left' | 'right';
+
+interface HeroSceneRefs {
   leftPaddle: AbstractMesh;
   rightPaddle: AbstractMesh;
   ball: AbstractMesh;
-};
+}
 
 /**
  * Small Babylon.js scene that recreates a stylized Pong arena with animated paddles + ball.
  */
 export class BabylonHero {
+  private static readonly ARENA_BOUNDS = { x: 4.8, z: 2.8 };
+  private static readonly BASE_BALL_HEIGHT = -0.4;
+  private static readonly PADDLE_CHASE_STRENGTH = 6;
+
   private engine: Engine | null = null;
   private scene: Scene | null = null;
+  private sceneRefs: HeroSceneRefs | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private animationTime = 0;
+  private ballVelocity = new Vector3(1, 0, 0.32).normalize();
+  private ballSpeed = 5.2;
+  private paddlePulse: Record<PaddleSide, number> = { left: 0, right: 0 };
   private resizeHandler = () => {
     if (this.engine) {
       this.engine.resize();
     }
   };
 
+  /**
+   * Mounts a canvas inside `container` and starts the Babylon render loop.
+   */
   init(container: HTMLElement): void {
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'babylon-hero-canvas';
@@ -40,18 +53,26 @@ export class BabylonHero {
     container.appendChild(this.canvas);
 
     this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    this.scene = this.buildScene(this.engine);
+    const { scene, refs } = this.buildScene(this.engine);
+    this.scene = scene;
+    this.sceneRefs = refs;
 
     this.engine.runRenderLoop(() => {
-      if (!this.scene) return;
-      this.animationTime += this.scene.getEngine().getDeltaTime() / 1000;
-      this.animateScene(this.scene, this.animationTime);
+      if (!this.scene) {
+        return;
+      }
+      const delta = this.scene.getEngine().getDeltaTime() / 1000;
+      this.animationTime += delta;
+      this.animateScene(delta);
       this.scene.render();
     });
 
     window.addEventListener('resize', this.resizeHandler);
   }
 
+  /**
+   * Stops rendering and frees GPU resources.
+   */
   dispose(): void {
     window.removeEventListener('resize', this.resizeHandler);
     this.scene?.dispose();
@@ -60,9 +81,10 @@ export class BabylonHero {
     this.scene = null;
     this.engine = null;
     this.canvas = null;
+    this.sceneRefs = null;
   }
 
-  private buildScene(engine: Engine): Scene {
+  private buildScene(engine: Engine): { scene: Scene; refs: HeroSceneRefs } {
     const scene = new Scene(engine);
     scene.clearColor = Color4.FromColor3(Color3.FromHexString('#0a0c1d'), 1);
 
@@ -121,28 +143,94 @@ export class BabylonHero {
     const ballMat = new StandardMaterial('ball-mat', scene);
     ballMat.emissiveColor = Color3.FromHexString('#f4a259');
     ball.material = ballMat;
-    ball.position = new Vector3(0, -0.4, 0);
+    ball.position = new Vector3(0, BabylonHero.BASE_BALL_HEIGHT, 0);
 
-    const refs: HeroSceneRefs = { leftPaddle, rightPaddle, ball };
-    scene.metadata = refs;
-    return scene;
+    return {
+      scene,
+      refs: { leftPaddle, rightPaddle, ball }
+    };
   }
 
-  private animateScene(scene: Scene, time: number): void {
-    const metadata = scene.metadata as HeroSceneRefs | undefined;
-    if (!metadata) return;
+  private animateScene(delta: number): void {
+    if (!this.sceneRefs) {
+      return;
+    }
 
-    const wave = Math.sin(time * 2);
-    const counterWave = Math.cos(time * 2.2);
+    this.updateBall(this.sceneRefs.ball, delta);
+    this.updatePaddles(this.sceneRefs.leftPaddle, this.sceneRefs.rightPaddle, this.sceneRefs.ball, delta);
+  }
 
-    metadata.leftPaddle.position.z = wave * 2.2;
-    metadata.leftPaddle.rotation.y = wave * 0.2;
+  private updateBall(ball: AbstractMesh, delta: number): void {
+    const movement = this.ballVelocity.scale(this.ballSpeed * delta);
+    ball.position.addInPlace(movement);
 
-    metadata.rightPaddle.position.z = -counterWave * 2.1;
-    metadata.rightPaddle.rotation.y = counterWave * 0.2;
+    // Bounce off the far edges of the arena
+    if (ball.position.x <= -BabylonHero.ARENA_BOUNDS.x) {
+      ball.position.x = -BabylonHero.ARENA_BOUNDS.x;
+      this.redirectBall('left');
+      this.paddlePulse.left = 1;
+    } else if (ball.position.x >= BabylonHero.ARENA_BOUNDS.x) {
+      ball.position.x = BabylonHero.ARENA_BOUNDS.x;
+      this.redirectBall('right');
+      this.paddlePulse.right = 1;
+    }
 
-    metadata.ball.position.x = Math.sin(time * 1.5) * 4.5;
-    metadata.ball.position.z = Math.cos(time * 2.5) * 2.8;
-    metadata.ball.position.y = -0.4 + Math.sin(time * 4) * 0.2;
+    if (Math.abs(ball.position.z) >= BabylonHero.ARENA_BOUNDS.z) {
+      ball.position.z = Math.sign(ball.position.z) * BabylonHero.ARENA_BOUNDS.z;
+      this.ballVelocity.z *= -1;
+      this.addEnglish();
+    }
+
+    // Subtle vertical bob to keep things lively
+    ball.position.y = BabylonHero.BASE_BALL_HEIGHT + Math.sin(this.animationTime * 6) * 0.12;
+  }
+
+  private updatePaddles(
+    leftPaddle: AbstractMesh,
+    rightPaddle: AbstractMesh,
+    ball: AbstractMesh,
+    delta: number
+  ): void {
+    const smoothing = Math.min(1, delta * BabylonHero.PADDLE_CHASE_STRENGTH);
+    const anticipatedZ = ball.position.z + this.ballVelocity.z * 0.6;
+    const bob = Math.sin(this.animationTime * 3) * 0.15;
+
+    leftPaddle.position.z += (ball.position.z + bob - leftPaddle.position.z) * smoothing;
+    rightPaddle.position.z += (anticipatedZ - rightPaddle.position.z) * smoothing;
+
+    leftPaddle.rotation.y = (ball.position.z - leftPaddle.position.z) * 0.05;
+    rightPaddle.rotation.y = (anticipatedZ - rightPaddle.position.z) * 0.05;
+
+    this.applyPaddlePulse(leftPaddle, 'left', delta);
+    this.applyPaddlePulse(rightPaddle, 'right', delta);
+  }
+
+  private redirectBall(hitSide: PaddleSide): void {
+    const direction = hitSide === 'left' ? 1 : -1;
+    this.ballVelocity.x = Math.abs(this.ballVelocity.x) * direction;
+    this.addEnglish(direction * 0.1);
+    this.ensureVelocity();
+    this.ballSpeed = 4.5 + Math.random() * 2;
+  }
+
+  private addEnglish(bias: number = 0): void {
+    this.ballVelocity.z += (Math.random() - 0.5) * 0.4 + bias;
+    this.ensureVelocity();
+  }
+
+  private ensureVelocity(): void {
+    this.ballVelocity.normalize();
+    if (Math.abs(this.ballVelocity.x) < 0.2) {
+      this.ballVelocity.x += 0.25 * Math.sign(this.ballVelocity.x || 1);
+      this.ballVelocity.normalize();
+    }
+  }
+
+  private applyPaddlePulse(mesh: AbstractMesh, side: PaddleSide, delta: number): void {
+    const current = this.paddlePulse[side];
+    const scale = 1 + current * 0.12;
+    mesh.scaling.y = scale;
+    mesh.scaling.x = 1 + current * 0.04;
+    this.paddlePulse[side] = Math.max(0, current - delta * 2.5);
   }
 }

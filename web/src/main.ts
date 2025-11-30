@@ -22,7 +22,7 @@ const routes = {
   '/settings': SettingsPage
 };
 
-// Initialize router
+// Initialize router and background scene
 const router = new Router(routes);
 
 // Start the application
@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkApiHealth();
   setInterval(checkApiHealth, 10000);
 });
+
 
 async function checkApiHealth() {
   const healthIndicator = document.getElementById('health-indicator');
