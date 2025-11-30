@@ -2,11 +2,11 @@
 NODE_ENV=development
 
 # API Configuration
-API_PORT=3000
+API_PORT=8080
 API_HOST=0.0.0.0
 
 # Database Configuration (for future use)
-DATABASE_URL=sqlite:./db/database.db
+DATABASE_URL=sqlite:./db/transcendence.db
 
 # Security
 JWT_SECRET=your-secret-key-here-change-in-production

@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install runtime + build dependencies (build deps removed after npm install)
+RUN apk add --no-cache curl python3 make g++
 
 WORKDIR /app
 
@@ -9,7 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --only=production
+RUN npm install --only=production \
+    && apk del python3 make g++
 
 # Copy source code
 COPY src/ ./src/
@@ -25,6 +26,6 @@ RUN adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD ["npm", "start"]

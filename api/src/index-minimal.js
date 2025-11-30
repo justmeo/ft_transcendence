@@ -1,11 +1,22 @@
+require('dotenv').config();
 const fastify = require('fastify')({ logger: true });
 const Database = require('better-sqlite3');
 const path = require('path');
 
-// Simple in-memory config
+const resolveDbPath = () => {
+  const rawPath = (process.env.DATABASE_URL || './db/transcendence.db').replace('sqlite:', '');
+  if (path.isAbsolute(rawPath)) {
+    return rawPath;
+  }
+  return path.resolve(process.cwd(), rawPath);
+};
+
+// Basic runtime config driven by environment variables
 const config = {
-  sessionSecret: 'dev-secret-key-change-in-production',
-  dbPath: '/app/db/transcendence.db'
+  sessionSecret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
+  dbPath: resolveDbPath(),
+  port: parseInt(process.env.API_PORT || '8080', 10),
+  host: process.env.API_HOST || '0.0.0.0'
 };
 
 // Initialize SQLite database
@@ -407,8 +418,8 @@ process.on('SIGTERM', () => {
 const start = async () => {
   try {
     console.log('🚀 Starting ft_transcendence API server with SQLite...');
-    await fastify.listen({ port: 8080, host: '0.0.0.0' });
-    console.log('✅ Server running on http://0.0.0.0:8080');
+    await fastify.listen({ port: config.port, host: config.host });
+    console.log(`✅ Server running on http://${config.host}:${config.port}`);
     console.log('📋 Available routes:');
     console.log('   GET  /api/health - Health check');
     console.log('   POST /api/auth/signup - User signup');
