@@ -1,8 +1,12 @@
-import { Page } from '../router';
+import { Component } from '../core/component';
 import { BabylonHero } from '../utils/babylon-hero';
 
-export class HomePage implements Page {
+export class HomePage extends Component<Record<string, never>> {
   private heroScene?: BabylonHero;
+
+  constructor() {
+    super({});
+  }
 
   render(): string {
     return `

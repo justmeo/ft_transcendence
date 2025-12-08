@@ -1,3 +1,5 @@
+import { Component } from './core/component';
+
 export interface Page {
   render(): string;
   mount?(container: HTMLElement): void;
@@ -5,7 +7,7 @@ export interface Page {
 }
 
 export interface Routes {
-  [path: string]: new() => Page;
+  [path: string]: new() => Page | Component;
 }
 
 export class Router {
@@ -69,10 +71,14 @@ export class Router {
 
     // Render new page
     this.currentPage = new PageClass();
-    this.contentElement.innerHTML = this.currentPage.render();
 
-    if (this.currentPage.mount) {
-      this.currentPage.mount(this.contentElement);
+    if (this.currentPage instanceof Component) {
+      this.currentPage.attachTo(this.contentElement);
+    } else {
+      this.contentElement.innerHTML = this.currentPage.render();
+      if (this.currentPage.mount) {
+        this.currentPage.mount(this.contentElement);
+      }
     }
   }
 
